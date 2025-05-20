@@ -1,0 +1,114 @@
+/* ===== БАЗОВЫЕ СТИЛИ ===== */
+p.blue { font-family: cursive; font-size: 15px; color: blue; }
+.highlight { color: #d82727; font-size: 20px; }
+.red-text { color: #d82727; font-size: 25px; }
+
+/* ===== КОМПАКТНЫЕ СТИЛИ ТАБЛИЦЫ ===== */
+.order-table {
+    border-collapse: collapse;
+    width: 90%;
+    max-width: 500px;
+    margin: 10px auto;
+    font-size: 13px;
+    box-shadow: 0 1px 10px rgba(0,0,0,0.1);
+    font-family: Arial, sans-serif;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.order-table tr:first-child {
+    background-color: #4a6fa5 !important;
+    color: white;
+    font-weight: bold;
+}
+
+.order-table td {
+    border: 1px solid #e0e0e0;
+    padding: 8px 10px;
+    vertical-align: middle;
+}
+
+.order-table tr:nth-child(even):not(:first-child) {
+    background-color: #f8f9fa;
+}
+
+/* Стили полей ввода */
+.order-table input.fill,
+.order-table select.fill {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.order-table input.fill:focus,
+.order-table select.fill:focus {
+    border-color: #4a6fa5;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(74,111,165,0.2);
+}
+
+.order-table input[readonly] {
+    background-color: #f5f5f5;
+    color: #555;
+    cursor: not-allowed;
+    border: 1px dashed #aaa;
+}
+
+/* Стили кнопок */
+.grey {
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    border-radius: 4px;
+    margin: 3px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.grey { background-color: #5a6268; }
+.grey:hover { background-color: #4a5258; transform: translateY(-1px); }
+.grey:active { background-color: #3a4248; transform: translateY(3px); }
+
+/* Цвета фона строк */
+.aqua-bg { background-color: #e0f7fa; }
+.gold-bg { background-color: #fff8e1; }
+.lightgreen-bg { background-color: #f1f8e9; }
+
+/* Дополнительные элементы */
+.center {
+    text-align: center;
+    color: #000000;
+    font-size: 14px;
+}
+
+.custom-select select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234a6fa5'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    padding-right: 25px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .order-table {
+        width: 95%;
+        font-size: 12px;
+    }
+    .order-table td {
+        padding: 6px 8px;
+    }
+    .blue, .red, .grey {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+}
