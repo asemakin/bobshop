@@ -5,8 +5,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Подключаем PHPMailer для отправки писем
-require __DIR__ . '/composer/vendor/autoload.php';
-use PHPMailer;
+require __DIR__ . '/vendor/autoload.php';
+use PHPMailer\PHPMailer;
 require_once("functions.php");
 
 
