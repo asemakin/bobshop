@@ -42,9 +42,34 @@
             box-shadow: none !important;
         }
     </style>
+
+    <script>
+        function validateQuantity(input, max) {
+            if (parseInt(input.value) > max) {
+                input.value = max;
+                alert('Нельзя заказать больше чем есть на складе! Максимум: ' + max);
+            }
+        }
+    </script>
+
 </head>
 <body>
+
+<?php
+// Подключение к базе данных MySQL
+$db = new mysqli('localhost', 'root', '', 'bob_auto_parts');
+
+// Проверка соединения с БД
+if ($db->connect_error) {
+    die("Ошибка подключения: " . $db->connect_error);
+}
+
+// Получаем все товары из базы данных
+$products = $db->query("SELECT * FROM warehouse ORDER BY product_name");
+?>
+
 <div>
+
     <h1 style="font-family: Georgia;
         font-size: 35px; color: black;
         text-align: center;
@@ -60,33 +85,42 @@
             <td class="center">Количество</td>
             <td class="center">Цена</td>
         </tr>
-        <tr class="aqua-bg">
-            <td>Шины</td>
-            <td>
-                <input class="fill" type="number" name="tireqty" placeholder="Введите от 1 до 999"
-                       tabindex="4"
-                >
-            </td>
-            <td><input class="fill" value="$ 100" name="TIREPRICE" readonly></td>
-        </tr>
-        <tr class="gold-bg">
-            <td>Масло</td>
-            <td>
-                <input class="fill" type="number" name="oilqty" placeholder="Введите от 1 до 999"
-                       tabindex="5"
-                >
-            <td><input class="fill" value="$ 10" name="OILPRICE" readonly></td>
-            </td>
-        </tr>
-        <tr class="lightgreen-bg">
-            <td>Свечи зажигания</td>
-            <td>
-                <input class="fill" type="number" name="sparkqty" placeholder="Введите от 1 до 999"
-                       tabindex="6"
-                >
-            <td><input class="fill" value="$ 4" name="SPARKPRICE" readonly></td>
-            </td>
-        </tr>
+
+        <?php
+        // Цвета для чередования строк
+        $rowColors = ['aqua-bg', 'gold-bg', 'lightgreen-bg'];
+        $colorIndex = 0;
+        $tabIndex = 4; // Начинаем с 4, так как первые 3 - адрес, телефон, email
+
+        while($product = $products->fetch_assoc()):
+            // Используем ID товара вместо названия для формирования имени поля
+            $fieldName = 'product_' . $product['id'];  // Новый формат
+            ?>
+
+            <tr class="<?= $rowColors[$colorIndex % count($rowColors)] ?>">
+                <td><?= htmlspecialchars($product['product_name']) ?></td>
+                <td>
+                    <input class="fill" type="number"
+                           name="<?= $fieldName ?>"
+                           placeholder="Введите от 1 до <?= $product['quantity'] ?>"
+                           min="0"
+                           max="<?= $product['quantity'] ?>"
+                           onchange="validateQuantity(this, <?= $product['quantity'] ?>)"
+                           tabindex="<?= $tabIndex ?>">
+                </td>
+                <td>
+                    <input class="fill"
+                           value="$ <?= number_format($product['price'], 2) ?>"
+                           name="price_<?= $product['id'] ?>"
+                           readonly>
+                </td>
+            </tr>
+            <?php
+            $colorIndex++;
+            $tabIndex++;
+        endwhile;
+        ?>
+
         <tr class="gold-bg">
             <td>Адрес доставки</td>
             <td>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Стоимость доставка</title>
-    <link rel="stylesheet" href="/BobMarleyAutoParts/orderform.css">
+    <link rel="stylesheet" href="orderform.css">
 
 
 </head>
