@@ -3,7 +3,7 @@ CREATE DATABASE IF NOT EXISTS bob_auto_parts;
 USE bob_auto_parts;
 
 CREATE TABLE IF NOT EXISTS orders (
-                                      order_number INT AUTO_INCREMENT PRIMARY KEY,
+                                      id INT AUTO_INCREMENT PRIMARY KEY,
                                       order_date DATETIME NOT NULL,
                                       tire_quantity INT DEFAULT 0,
                                       oil_quantity INT DEFAULT 0,
@@ -28,7 +28,7 @@ ALTER TABLE orders
 SELECT * FROM orders;
 
 CREATE TABLE IF NOT EXISTS orders (
-                                      order_number INT AUTO_INCREMENT PRIMARY KEY,
+                                      id INT AUTO_INCREMENT PRIMARY KEY,
                                       order_date DATETIME NOT NULL,
                                       tire_quantity INT DEFAULT 0,
                                       oil_quantity INT DEFAULT 0,
@@ -50,7 +50,7 @@ CREATE DATABASE IF NOT EXISTS bob_auto_parts;
 USE bob_auto_parts;
 
 CREATE TABLE IF NOT EXISTS orders (
-                                      order_number INT AUTO_INCREMENT PRIMARY KEY,
+                                      id INT AUTO_INCREMENT PRIMARY KEY,
                                       order_date DATETIME NOT NULL,
                                       tire_quantity INT DEFAULT 0,
                                       oil_quantity INT DEFAULT 0,
@@ -86,7 +86,7 @@ INSERT INTO warehouse (product_name, quantity, price) VALUES
 ('Свечи зажигания', 200, 4.00);
 DROP TABLE orders;
 CREATE TABLE IF NOT EXISTS orders (
-                                      order_number INT AUTO_INCREMENT PRIMARY KEY,
+                                      id INT AUTO_INCREMENT PRIMARY KEY,
                                       order_date DATETIME NOT NULL,
                                       subtotal DECIMAL(10, 2) NOT NULL,
                                       discount DECIMAL(10, 2) DEFAULT 0.00,
@@ -102,12 +102,12 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 CREATE TABLE IF NOT EXISTS order_items (
                                            item_id INT AUTO_INCREMENT PRIMARY KEY,
-                                           order_number INT NOT NULL,
+                                           id INT NOT NULL,
                                            product_id INT NOT NULL,
                                            product_name VARCHAR(100) NOT NULL,
                                            quantity INT NOT NULL,
                                            price DECIMAL(10, 2) NOT NULL,
-                                           FOREIGN KEY (order_number) REFERENCES orders(order_number),
+                                           FOREIGN KEY (id) REFERENCES orders(id),
                                            FOREIGN KEY (product_id) REFERENCES warehouse(id)
 );
 SELECT * FROM order_items;

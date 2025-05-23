@@ -495,7 +495,7 @@ $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $conn->beginTransaction();
 
 // Получаем максимальный номер заказа с блокировкой таблицы
-$stmt = $conn->query("SELECT MAX(order_number) AS max_number FROM orders FOR UPDATE");
+$stmt = $conn->query("SELECT MAX(id) AS max_number FROM orders FOR UPDATE");
 $result = $stmt->fetch(PDO::FETCH_ASSOC);
 $newNumber = $result && $result['max_number'] ? (int)$result['max_number'] + 1 : 1;
 

@@ -155,7 +155,7 @@ try {
 
         // Сохраняем основной заказ
         $stmt = $conn->prepare("INSERT INTO orders (
-                    order_number, 
+                    id, 
                     order_date, 
                     subtotal, 
                     discount, 
@@ -168,7 +168,7 @@ try {
                     customer_email, 
                     referral_source
                 ) VALUES (
-                    :order_number, 
+                    :id, 
                     :order_date, 
                     :subtotal, 
                     :discount, 
@@ -183,7 +183,7 @@ try {
                 )");
 
         $stmt->execute([
-            ':order_number' => $orderNumber,
+            ':id' => $orderNumber,
             ':order_date' => $orderDate,
             ':subtotal' => $subtotal,
             ':discount' => $discount_amount,
@@ -200,13 +200,13 @@ try {
         // Сохраняем товары заказа
         foreach ($orderedItems as $item) {
             $stmt = $conn->prepare("INSERT INTO order_items (
-                        order_number, 
+                        id, 
                         product_id, 
                         product_name, 
                         quantity, 
                         price
                     ) VALUES (
-                        :order_number, 
+                        :id, 
                         :product_id, 
                         :product_name, 
                         :quantity, 
@@ -214,7 +214,7 @@ try {
                     )");
 
             $stmt->execute([
-                ':order_number' => $orderNumber,
+                ':id' => $orderNumber,
                 ':product_id' => $item['id'],
                 ':product_name' => $item['name'],
                 ':quantity' => $item['quantity'],
