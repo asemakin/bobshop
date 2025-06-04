@@ -9,6 +9,14 @@ require __DIR__ . '/vendor/autoload.php';
 use PHPMailer\PHPMailer;
 require_once("functions.php");
 
+
+$orderNumber = $_POST['orderID'] ?? '';
+
+//echo "<pre>POST данные:";
+//print_r($_POST);
+//echo "</pre>";
+
+
 // Проверка, был ли отправлен POST-запрос
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Безопасное получение адреса доставки (если нет - пустая строка)
@@ -16,10 +24,10 @@ $address = $_POST['address'] ?? '';
 
 // Валидация адреса (если не пустой)
 if (!empty($address)) {
-$orderNumber = generateOrderNumber(); // Генерируем номер и сохраняем
 
-$delivery_date = $_POST['delivery_date'] ?? '';
-$delivery_time = $_POST['delivery_time'] ?? '';
+
+$deliveryDate = $_POST['deliveryDate'] ?? '';
+$deliveryTime = $_POST['deliveryTime'] ?? '';
 $phone = $_POST['tel'] ?? '';
 $email = $_POST['email'] ?? '';
 $find = $_POST['find'] ?? '';
@@ -54,8 +62,8 @@ $month = date('n');
 echo "<p>Ваш заказ обработан в: " . date("H:i, d-") . $months[$month] . date("-Y") . "</p>\n";
 echo "<p><strong>Номер вашего заказа: $orderNumber</strong></p>";
 echo "<p class='blue'>Адрес для доставки: " . htmlspecialchars($address) . "</p>";
-echo "<p class='blue'>Дата доставки: " . (!empty($delivery_date) ? $delivery_date : 'не указана') . "</p>";
-echo "<p class='blue'>Время доставки: " . (!empty($delivery_time) ? $delivery_time : 'не указано') . "</p>";
+echo "<p class='blue'>Дата доставки: " . (!empty($deliveryDate) ? $deliveryDate : 'не указана') . "</p>";
+echo "<p class='blue'>Время доставки: " . (!empty($deliveryTime) ? $deliveryTime : 'не указано') . "</p>";
 echo "<p class='blue'>Ваш номер телефона: " . (!empty($phone) ? htmlspecialchars($phone) : 'не указан') . "</p>";
 echo "<p class='blue'>Ваша электронная почта: " . (!empty($email) ? htmlspecialchars($email) : 'не указана') . "</p>";
 echo "Ваш заказ выглядит следующим образом:<br>\n<br>\n";
@@ -73,7 +81,7 @@ try {
 
 
 // Получаем все товары из базы
-    $stmt = $conn->query("SELECT * FROM warehouse");
+    $stmt = $conn->query("SELECT * FROM `warehouse`");
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $orderedItems = [];
@@ -84,7 +92,7 @@ try {
 
     foreach ($products as $product) {
         // Формируем имя поля как в форме
-        $fieldName = 'product_' . $product['id'];
+        $fieldName = 'productName' . $product['productID'];
 
         // Получаем количество
         $quantity = isset($_POST[$fieldName]) ? (int)$_POST[$fieldName] : 0;
@@ -95,8 +103,8 @@ try {
             $itemTotal = $quantity * $price;
 
             $orderedItems[] = [
-                'id' => $product['id'],
-                'name' => $product['product_name'],
+                'itemID' => $product['productID'],
+                'name' => $product['productName'],
                 'quantity' => $quantity,  // Теперь будет правильное количество
                 'price' => $price,
                 'total' => $itemTotal
@@ -108,10 +116,10 @@ try {
 
 
             // Вывод информации о товаре
-                echo htmlspecialchars($product['product_name']) . ": $quantity шт. × $".number_format($price, 2)." = $".number_format($itemTotal, 2)."<br>\n";
+                echo htmlspecialchars($product['productName']) . ": $quantity шт. × $".number_format($price, 2)." = $".number_format($itemTotal, 2)."<br>\n";
 
                 // Проверка скидки для шин
-                if (stripos($product['product_name'], 'шины') !== false && $quantity >= 10) {
+                if (stripos($product['productName'], 'шины') !== false && $quantity >= 10) {
                     if ($quantity <= 49) {
                         $discount = 5;
                     } elseif ($quantity >= 50 && $quantity <= 99) {
@@ -130,9 +138,6 @@ try {
                 }
             }
         }
-    echo "<pre>POST данные:";
-    print_r($_POST);
-    echo "</pre>";
 
 
     if (!$hasItems) {
@@ -153,76 +158,108 @@ try {
         /* ===== СОХРАНЕНИЕ ЗАКАЗА В БАЗУ ДАННЫХ ===== */
         $orderDate = date("Y-m-d H:i:s");
 
-        // Сохраняем основной заказ
-        $stmt = $conn->prepare("INSERT INTO orders (
-                    id, 
-                    order_date, 
-                    subtotal, 
-                    discount, 
-                    tax, 
-                    total_amount, 
-                    delivery_address, 
-                    delivery_date, 
-                    delivery_time, 
-                    customer_phone, 
-                    customer_email, 
-                    referral_source
+        try {
+            // Начинаем транзакцию
+            $conn->beginTransaction();
+
+            // 1. Сохраняем основной заказ
+            $stmt = $conn->prepare("INSERT INTO `order` (
+                orderDate,
+                subTotal,
+                discount,
+                tax,
+                totalAmount,
+                deliveryAddress,
+                deliveryDate,
+                deliveryTime,
+                customerPhone,
+                customerEmail,
+                referralSource
+            ) VALUES (
+                :orderDate, 
+                :subTotal, 
+                :discount, 
+                :tax, 
+                :totalAmount, 
+                :deliveryAddress, 
+                :deliveryDate, 
+                :deliveryTime, 
+                :customerPhone, 
+                :customerEmail, 
+                :referralSource 
+            )");
+
+            $params = [
+                ':orderDate' => $orderDate,
+                ':subTotal' => (float)$subtotal,
+                ':discount' => (float)$discount_amount,
+                ':tax' => (float)$tax,
+                ':totalAmount' => (float)$totalamount,
+                ':deliveryAddress' => $address,
+                ':deliveryDate' => !empty($deliveryDate) ? $deliveryDate : null,
+                ':deliveryTime' => !empty($deliveryTime) ? $deliveryTime : null,
+                ':customerPhone' => $phone,
+                ':customerEmail' => !empty($email) ? $email : null,
+                ':referralSource' => !empty($find) ? $find : null
+            ];
+
+            $stmt->execute($params);
+            $orderID = $conn->lastInsertId();
+
+            // 2. Сохраняем товары заказа
+            foreach ($orderedItems as $item) {
+                // Проверяем и нормализуем данные
+                $productID = $item['itemID'] ?? $item['productID'] ?? null;
+                $productName = $item['productName'] ?? 'Неизвестный товар';
+                $quantity = $item['quantity'] ?? 1;
+                $price = $item['price'] ?? 0;
+
+                if (empty($productID)) {
+                    throw new Exception("Отсутствует ID товара в заказе");
+                }
+
+                $stmt = $conn->prepare("INSERT INTO `orderitems` (
+                    orderNumber,
+                    productID,
+                    productName,
+                    quantity,
+                    price
                 ) VALUES (
-                    :id, 
-                    :order_date, 
-                    :subtotal, 
-                    :discount, 
-                    :tax, 
-                    :total_amount, 
-                    :delivery_address, 
-                    :delivery_date, 
-                    :delivery_time, 
-                    :customer_phone, 
-                    :customer_email, 
-                    :referral_source
+                    :orderNumber,      
+                    :productID,
+                    :productName,
+                    :quantity,
+                    :price
                 )");
 
-        $stmt->execute([
-            ':id' => $orderNumber,
-            ':order_date' => $orderDate,
-            ':subtotal' => $subtotal,
-            ':discount' => $discount_amount,
-            ':tax' => $tax,
-            ':total_amount' => $totalamount,
-            ':delivery_address' => $address,
-            ':delivery_date' => $delivery_date,
-            ':delivery_time' => $delivery_time,
-            ':customer_phone' => $phone,
-            ':customer_email' => $email,
-            ':referral_source' => $find
-        ]);
+                // Все параметры должны точно соответствовать плейсхолдерам
+                $itemParams = [
+                    ':orderNumber' => (int)$orderID,
+                    ':productID' => (int)$productID,
+                    ':productName' => $productName,
+                    ':quantity' => max(1, (int)$quantity),
+                    ':price' => max(0, (float)$price)
+                ];
 
-        // Сохраняем товары заказа
-        foreach ($orderedItems as $item) {
-            $stmt = $conn->prepare("INSERT INTO order_items (
-                        id, 
-                        product_id, 
-                        product_name, 
-                        quantity, 
-                        price
-                    ) VALUES (
-                        :id, 
-                        :product_id, 
-                        :product_name, 
-                        :quantity, 
-                        :price
-                    )");
+                $stmt->execute($itemParams);
+            }
 
-            $stmt->execute([
-                ':id' => $orderNumber,
-                ':product_id' => $item['id'],
-                ':product_name' => $item['name'],
-                ':quantity' => $item['quantity'],
-                ':price' => $item['price']
-            ]);
+            $conn->commit();
+            echo "<p>Заказ успешно сохранен в базе данных!</p>";
+
+        } catch (PDOException $e) {
+            $conn->rollBack();
+            echo "<p class='error'>Ошибка базы данных: " . $e->getMessage() . "</p>";
+            // Для отладки:
+            echo "<pre>Параметры: " . print_r($itemParams ?? [], true) . "</pre>";
+        } catch (Exception $e) {
+            $conn->rollBack();
+            echo "<p class='error'>Ошибка: " . $e->getMessage() . "</p>";
         }
 
-        echo "<p>Заказ успешно сохранен в базе данных!</p>";
+        //echo "<p>Заказ успешно сохранен в базе данных!</p>";
+
+
 
         /* ===== ОТПРАВКА ПИСЬМА КЛИЕНТУ ===== */
         if (!empty($email) && $hasItems) {
@@ -327,8 +364,8 @@ try {
                                     <h3 style="color: #1a3e72; border-bottom: 2px solid #f7931e; padding-bottom: 5px;">🚚 Детали доставки</h3>
                                     <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
                                         <p style="margin: 5px 0;"><strong>Адрес:</strong> '.htmlspecialchars($address).'</p>
-                                        <p style="margin: 5px 0;"><strong>Дата доставки:</strong> '.(!empty($delivery_date) ? htmlspecialchars($delivery_date) : 'не указана').'</p>
-                                        <p style="margin: 5px 0;"><strong>Время доставки:</strong> '.(!empty($delivery_time) ? htmlspecialchars($delivery_time) : 'не указано').'</p>
+                                        <p style="margin: 5px 0;"><strong>Дата доставки:</strong> '.(!empty($deliveryDate) ? htmlspecialchars($deliveryDate) : 'не указана').'</p>
+                                        <p style="margin: 5px 0;"><strong>Время доставки:</strong> '.(!empty($deliveryTime) ? htmlspecialchars($deliveryTime) : 'не указано').'</p>
                                         <p style="margin: 5px 0;"><strong>Контактный телефон:</strong> '.htmlspecialchars($phone).'</p>
                                     </div>
                                     
@@ -369,8 +406,8 @@ try {
                     . "Сумма к оплате: $".number_format($totalamount, 2)."\n\n"
                     . "ДОСТАВКА:\n"
                     . "Адрес: $address\n"
-                    . "Дата: ".(!empty($delivery_date) ? $delivery_date : 'не указана')."\n"
-                    . "Время: ".(!empty($delivery_time) ? $delivery_time : 'не указано')."\n"
+                    . "Дата: ".(!empty($deliveryDate) ? $deliveryDate : 'не указана')."\n"
+                    . "Время: ".(!empty($deliveryTime) ? $deliveryTime : 'не указано')."\n"
                     . "Телефон: $phone\n\n"
                     . "Спасибо за покупку!";
 

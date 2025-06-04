@@ -478,39 +478,52 @@ function get_currency_rates_2(array $config = [])
 ?>
 <?php
 function generateOrderNumber() {
-$dbHost = 'localhost';
-$dbName = 'bob_auto_parts';
-$dbUser = 'root';
-$dbPass = '';
+    $dbHost = 'localhost';
+    $dbName = 'bob_auto_parts';
+    $dbUser = 'root';
+    $dbPass = '';
 
-try {
-$conn = new PDO(
-"mysql:host=$dbHost;dbname=$dbName",
-$dbUser,
-$dbPass
-);
-$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    try {
+        // Подключение к базе данных
+        $conn = new PDO(
+            "mysql:host=$dbHost;dbname=$dbName",
+            $dbUser,
+            $dbPass,
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        );
 
-// Используем транзакцию
-$conn->beginTransaction();
+        // Начинаем транзакцию для безопасности
+        $conn->beginTransaction();
 
-// Получаем максимальный номер заказа с блокировкой таблицы
-$stmt = $conn->query("SELECT MAX(id) AS max_number FROM orders FOR UPDATE");
-$result = $stmt->fetch(PDO::FETCH_ASSOC);
-$newNumber = $result && $result['max_number'] ? (int)$result['max_number'] + 1 : 1;
+        // 1. Получаем текущий максимальный номер с блокировкой таблицы
+        $stmt = $conn->query("SELECT MAX(orderID) AS last_number FROM `order` FOR UPDATE");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Подтверждаем транзакцию
-$conn->commit();
+        // 2. Генерируем следующий номер
+        $newNumber = 1;
+        if ($result && isset($result['last_number']) && is_numeric($result['last_number'])) {
+            $newNumber = (int)$result['last_number'] + 1;
+        }
 
-$conn = null;
+        // Фиксируем изменения
+        $conn->commit();
 
-return $newNumber;
+        return $newNumber;
 
-} catch(PDOException $e) {
-if (isset($conn) && $conn->inTransaction()) {
-$conn->rollBack();
-}
-error_log("Ошибка генерации номера: " . $e->getMessage());
-return (int)date('YmdHis');
-}
+    } catch(PDOException $e) {
+        // Откатываем транзакцию при ошибке
+        if (isset($conn) && $conn->inTransaction()) {
+            $conn->rollBack();
+        }
+
+        error_log("Ошибка генерации номера заказа: " . $e->getMessage());
+
+        // Резервный вариант (временная метка Unix)
+        return time();
+    } finally {
+        // Всегда закрываем соединение
+        if (isset($conn)) {
+            $conn = null;
+        }
+    }
 }

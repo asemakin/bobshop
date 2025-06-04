@@ -65,7 +65,7 @@ if ($db->connect_error) {
 }
 
 // Получаем все товары из базы данных
-$products = $db->query("SELECT * FROM warehouse ORDER BY product_name");
+$products = $db->query("SELECT * FROM warehouse ORDER BY productName");
 ?>
 
 <div>
@@ -94,11 +94,11 @@ $products = $db->query("SELECT * FROM warehouse ORDER BY product_name");
 
         while($product = $products->fetch_assoc()):
             // Используем ID товара вместо названия для формирования имени поля
-            $fieldName = 'product_' . $product['id'];  // Новый формат
+            $fieldName = 'productName' . $product['productID'];  // Новый формат
             ?>
 
             <tr class="<?= $rowColors[$colorIndex % count($rowColors)] ?>">
-                <td><?= htmlspecialchars($product['product_name']) ?></td>
+                <td><?= htmlspecialchars($product['productName']) ?></td>
                 <td>
                     <input class="fill" type="number"
                            name="<?= $fieldName ?>"
@@ -111,7 +111,7 @@ $products = $db->query("SELECT * FROM warehouse ORDER BY product_name");
                 <td>
                     <input class="fill"
                            value="$ <?= number_format($product['price'], 2) ?>"
-                           name="price_<?= $product['id'] ?>"
+                           name="price_<?= $product['productID'] ?>"
                            readonly>
                 </td>
             </tr>
@@ -130,13 +130,13 @@ $products = $db->query("SELECT * FROM warehouse ORDER BY product_name");
         <tr class="lightgreen-bg">
             <td>Дата доставки</td>
             <td>
-                <input class="fill" type="date" name="delivery_date" tabindex="7">
+                <input class="fill" type="date" name="deliveryDate" tabindex="7">
             </td>
         </tr>
         <tr class="gold-bg">
             <td>Время доставки</td>
             <td>
-                <input class="fill" type="time" name="delivery_time" tabindex="8">
+                <input class="fill" type="time" name="deliveryTime" tabindex="8">
             </td>
         </tr>
         <tr class="lightgreen-bg">
