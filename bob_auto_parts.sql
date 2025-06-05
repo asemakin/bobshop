@@ -132,3 +132,20 @@ SELECT * FROM orderitems;
 ALTER TABLE `orderitems`
     MODIFY COLUMN `productName` VARCHAR(255) NULL,
     MODIFY COLUMN `productID` INT NULL;
+
+ALTER TABLE `order` AUTO_INCREMENT = 1;
+TRUNCATE TABLE `order`;
+DELETE FROM `order`;
+ALTER TABLE `order` AUTO_INCREMENT = 1;
+
+-- Отключите проверку внешних ключей
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Удалите все записи
+DELETE FROM `order`;
+
+-- Сбросьте автоинкремент
+ALTER TABLE `order` AUTO_INCREMENT = 1;
+
+-- Включите проверку обратно
+SET FOREIGN_KEY_CHECKS = 1;

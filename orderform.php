@@ -10,7 +10,7 @@ use PHPMailer\PHPMailer;
 require_once("functions.php");
 
 
-$orderNumber = $_POST['orderID'] ?? '';
+
 
 //echo "<pre>POST данные:";
 //print_r($_POST);
@@ -25,7 +25,7 @@ $address = $_POST['address'] ?? '';
 // Валидация адреса (если не пустой)
 if (!empty($address)) {
 
-
+$orderNumber = $_POST['orderID'] ?? '';
 $deliveryDate = $_POST['deliveryDate'] ?? '';
 $deliveryTime = $_POST['deliveryTime'] ?? '';
 $phone = $_POST['tel'] ?? '';
