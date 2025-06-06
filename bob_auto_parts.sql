@@ -149,3 +149,13 @@ ALTER TABLE `warehouse` AUTO_INCREMENT = 1;
 
 -- Включите проверку обратно
 SET FOREIGN_KEY_CHECKS = 1;
+
+USE bob_auto_parts;
+
+CREATE TABLE `orderReferralInfo` (
+                                       `orderID` int(11) NOT NULL,
+                                       `sourceCode` char(1) NOT NULL,
+                                       `sourceName` varchar(50) NOT NULL,
+                                       PRIMARY KEY (`orderID`),
+                                       CONSTRAINT `fk_ori_order` FOREIGN KEY (`orderID`) REFERENCES `order` (`orderID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

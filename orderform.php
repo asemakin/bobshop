@@ -138,6 +138,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Завершаем транзакцию - сохраняем все изменения
                 $conn->commit();
 
+                // После сохранения заказа (после $conn->commit()) добавляем:
+
+// Определяем названия источников
+                $sourceNames = [
+                    'a' => 'Постоянный клиент',
+                    'b' => 'Телереклама',
+                    'c' => 'Телефонный справочник',
+                    'd' => 'Рекомендация друга'
+                ];
+
+                if (!empty($find) && isset($sourceNames[$find])) {
+                    $stmt = $conn->prepare("INSERT INTO `orderReferralInfo` 
+        (orderID, sourceCode, sourceName) 
+        VALUES (:orderID, :code, :name)");
+                    $stmt->execute([
+                        ':orderID' => $orderID,
+                        ':code' => $find,
+                        ':name' => $sourceNames[$find]
+                    ]);
+                }
+
+
                 // Выводим HTML-страницу с результатами заказа
                 ?>
                 <!DOCTYPE html>
@@ -148,8 +170,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <link rel="stylesheet" href="orderform.css">
                 </head>
                 <body>
-                <h1>Автозапчасти Боба Марли</h1>
-                <h2>Результаты вашего заказа</h2>
+                <h1 style="font-family: cursive; font-size: 30px; color: black;">+Автозапчасти Боба Марли+</h1>
+                <h2 style="font-family: cursive; font-size: 20px; color: midnightblue;">-Результаты вашего заказа-</h2>
 
                 <div>
                     <button class="grey" onclick="window.location.href='orderforms.php'">
@@ -205,21 +227,193 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         // HTML-содержимое письма
                         $mail->isHTML(true);
-                        $mail->Body = "
-                                <h2>Спасибо за ваш заказ #$orderID</h2>
-                                <p>Дата заказа: " . date("d.m.Y H:i") . "</p>
-                                <h3>Состав заказа:</h3>
-                                <ul>";
 
+// В разделе отправки письма замените содержимое $mail->Body на:
+
+                        $mail->Body = '
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Подтверждение заказа #'.$orderID.'</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.5; 
+            color: #333; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 0; 
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .header { 
+            background-color: #2c3e50; 
+            color: white; 
+            padding: 15px; 
+            text-align: center;
+            border-bottom: 3px solid #e67e22;
+        }
+        .content { 
+            padding: 20px; 
+        }
+        .footer { 
+            background-color: #ecf0f1; 
+            padding: 15px; 
+            text-align: center; 
+            font-size: 12px; 
+            color: #7f8c8d;
+        }
+        .order-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        .order-table th { 
+            background-color: #34495e; 
+            color: white; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        .order-table td { 
+            padding: 8px; 
+            border-bottom: 1px solid #eee; 
+        }
+        .total-row { 
+            font-weight: bold; 
+            background: #f9f9f9;
+        }
+        .button { 
+            display: inline-block; 
+            background-color: #e67e22; 
+            color: white; 
+            padding: 8px 15px; 
+            text-decoration: none; 
+            border-radius: 3px; 
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .discount { 
+            color: #e74c3c; 
+        }
+        .delivery-info {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2 style="margin:0;font-size:20px;">Автозапчасти Боба</h2>
+            <p style="margin:5px 0 0;font-size:16px;">Заказ #'.$orderID.'</p>
+        </div>
+        
+        <div class="content">
+            <p>Здравствуйте,</p>
+            <p>Ваш заказ успешно оформлен. Ниже приведены детали:</p>
+            
+            <h3 style="margin-top:20px;font-size:16px;">Состав заказа:</h3>
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Наименование</th>
+                        <th>Кол-во</th>
+                        <th>Цена</th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>';
+
+// Добавляем строки с товарами
                         foreach ($orderedItems as $item) {
-                            $mail->Body .= "<li>{$item['name']} - {$item['quantity']} шт. × $" .
-                                number_format($item['price'], 2) . " = $" .
-                                number_format($item['total'], 2) . "</li>";
+                            $mail->Body .= '
+                <tr>
+                    <td>'.htmlspecialchars($item['name']).'</td>
+                    <td>'.$item['quantity'].'</td>
+                    <td>$'.number_format($item['price'], 2).'</td>
+                    <td>$'.number_format($item['total'], 2).'</td>
+                </tr>';
                         }
 
-                        $mail->Body .= "</ul>
-                                <p><strong>Итого: $" . number_format($totalamount, 2) . "</strong></p>
-                                <p>Адрес доставки: " . htmlspecialchars($address) . "</p>";
+// Добавляем скидку, если есть
+                        if ($discount_amount > 0) {
+                            $mail->Body .= '
+                <tr class="discount">
+                    <td colspan="3" style="text-align: right;">Скидка:</td>
+                    <td>-$'.number_format($discount_amount, 2).'</td>
+                </tr>';
+                        }
+
+                        $mail->Body .= '
+                <tr class="total-row">
+                    <td colspan="3" style="text-align: right;">Итого:</td>
+                    <td>$'.number_format($totalamount, 2).'</td>
+                </tr>
+                </tbody>
+            </table>
+            
+            <div class="delivery-info">
+                <h3 style="margin-top:0;font-size:16px;">Доставка:</h3>
+                <p><strong>Адрес:</strong> '.htmlspecialchars($address).'</p>'.
+                            (!empty($deliveryDate) ? '<p><strong>Дата:</strong> '.htmlspecialchars($deliveryDate).'</p>' : '').
+                            (!empty($deliveryTime) ? '<p><strong>Время:</strong> '.htmlspecialchars($deliveryTime).'</p>' : '').'
+                <p><strong>Телефон:</strong> '.htmlspecialchars($phone).'</p>
+            </div>
+            
+            <p style="text-align:center;">
+                <a href="https://bob-autoparts.ru/track?order='.$orderID.'" class="button">Отследить заказ</a>
+            </p>
+            
+            <p>По вопросам звоните: <strong>+7 (123) 456-78-90</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>© '.date('Y').' Автозапчасти Боба</p>
+            <p>г. Москва, ул. Автозапчастей, 42</p>
+        </div>
+    </div>
+</body>
+</html>';
+
+// Текстовая версия письма
+                        $mail->AltBody = "Автозапчасти Боба\n\n"
+                            . "Ваш заказ #$orderID\n\n"
+                            . "Товары:\n";
+
+                        foreach ($orderedItems as $item) {
+                            $mail->AltBody .= "- ".htmlspecialchars($item['name'])." (".$item['quantity']." шт.) - $".number_format($item['total'], 2)."\n";
+                        }
+
+                        if ($discount_amount > 0) {
+                            $mail->AltBody .= "\nСкидка: -$".number_format($discount_amount, 2)."\n";
+                        }
+
+                        $mail->AltBody .= "\nИтого: $".number_format($totalamount, 2)."\n\n"
+                            . "Доставка:\n"
+                            . "Адрес: ".htmlspecialchars($address)."\n";
+
+                        if (!empty($deliveryDate)) {
+                            $mail->AltBody .= "Дата: ".htmlspecialchars($deliveryDate)."\n";
+                        }
+
+                        if (!empty($deliveryTime)) {
+                            $mail->AltBody .= "Время: ".htmlspecialchars($deliveryTime)."\n";
+                        }
+
+                        $mail->AltBody .= "\nТелефон: ".htmlspecialchars($phone)."\n\n"
+                            . "Спасибо за заказ!\n"
+                            . "Автозапчасти Боба\n"
+                            . "Тел: +7 (123) 456-78-90";
 
                         // Отправляем письмо
                         $mail->send();

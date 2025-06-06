@@ -70,10 +70,10 @@ $products = $db->query("SELECT * FROM warehouse ORDER BY productName");
 
 <div>
 
-    <h1 style="font-family: Georgia;
-        font-size: 35px; color: black;
+    <h1 style="font-family: cursive;
+        font-size: 30px; color: black;
         text-align: center;
-        font-style: italic;">Форма заказа</h1>
+        font-style: italic;">"Форма заказа"</h1>
 
 </div>
 
@@ -100,7 +100,7 @@ $products = $db->query("SELECT * FROM warehouse ORDER BY productName");
             <tr class="<?= $rowColors[$colorIndex % count($rowColors)] ?>">
                 <td><?= htmlspecialchars($product['productName']) ?></td>
                 <td>
-                    <input class="fill" type="number"
+                    <input style="font-family: cursive; font-size: 13px; color: firebrick;" class="fill" type="number"
                            name="<?= $fieldName ?>"
                            placeholder="На складе: <?= $product['quantity'] ?> шт."
                            min="0"
