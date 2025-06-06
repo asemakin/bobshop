@@ -102,7 +102,7 @@ $products = $db->query("SELECT * FROM warehouse ORDER BY productName");
                 <td>
                     <input class="fill" type="number"
                            name="<?= $fieldName ?>"
-                           placeholder="Введите от 1 до <?= $product['quantity'] ?>"
+                           placeholder="На складе: <?= $product['quantity'] ?> шт."
                            min="0"
                            max="<?= $product['quantity'] ?>"
                            onchange="validateQuantity(this, <?= $product['quantity'] ?>)"

@@ -142,10 +142,10 @@ ALTER TABLE `order` AUTO_INCREMENT = 1;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Удалите все записи
-DELETE FROM `order`;
+DELETE FROM `warehouse`;
 
 -- Сбросьте автоинкремент
-ALTER TABLE `order` AUTO_INCREMENT = 1;
+ALTER TABLE `warehouse` AUTO_INCREMENT = 1;
 
 -- Включите проверку обратно
 SET FOREIGN_KEY_CHECKS = 1;
