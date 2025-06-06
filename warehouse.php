@@ -104,6 +104,7 @@ if (!$products) {
     <title>Управление складом</title>
     <!-- Подключаем внешние стили -->
     <link rel="stylesheet" href="warehouse.css">
+    <?php include("time.php");?>
 </head>
 <body>
         <h2 style="font-family: cursive; font-size: 30px; color: black;">
