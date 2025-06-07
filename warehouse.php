@@ -132,14 +132,14 @@ if (!$products) {
     <tbody>
     <?php while($product = $products->fetch_assoc()): ?>
         <!-- Каждая строка содержит data-id с ID товара -->
-        <tr data-id="<?= $product['productID'] ?>">
+        <tr data-id="<?= $product['productID'] ?? null ?>">
             <!-- Ячейки с классом editable можно редактировать -->
             <td class="editable" data-field="productName"><?= htmlspecialchars($product['productName']) ?></td>
             <td class="editable" data-field="quantity"><?= htmlspecialchars($product['quantity']) ?></td>
             <td class="editable" data-field="price"><?= htmlspecialchars(number_format($product['price'], 2)) ?> $</td>
             <td>
                 <!-- Ссылка для удаления товара с подтверждением -->
-                <a href="?delete_id=<?= $product['productID'] ?>"
+                <a href="?delete_id=<?= $product['productID'] ?? null ?>"
                    onclick="return confirm('Вы уверены, что хотите удалить этот товар?')">
                     Удалить
                 </a>

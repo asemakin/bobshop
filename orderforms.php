@@ -65,7 +65,7 @@ if ($db->connect_error) {
 }
 
 // Получаем все товары из базы данных
-$products = $db->query("SELECT * FROM warehouse ORDER BY productName");
+$products = $db->query("SELECT *, orderId AS productID FROM warehouse ORDER BY productName");
 ?>
 
 <div>
@@ -73,7 +73,7 @@ $products = $db->query("SELECT * FROM warehouse ORDER BY productName");
     <h1 style="font-family: cursive;
         font-size: 30px; color: black;
         text-align: center;
-        font-style: italic;">"Форма заказа"</h1>
+        font-style: italic;">Форма заказа</h1>
 
 </div>
 
@@ -94,7 +94,7 @@ $products = $db->query("SELECT * FROM warehouse ORDER BY productName");
 
         while($product = $products->fetch_assoc()):
             // Используем ID товара вместо названия для формирования имени поля
-            $fieldName = 'productName' . $product['productID'];  // Новый формат
+            $fieldName = 'productName' . ($product['id'] ?? '');  // Новый формат
             ?>
 
             <tr class="<?= $rowColors[$colorIndex % count($rowColors)] ?>">
@@ -111,7 +111,7 @@ $products = $db->query("SELECT * FROM warehouse ORDER BY productName");
                 <td>
                     <input class="fill"
                            value="$ <?= number_format($product['price'], 2) ?>"
-                           name="price_<?= $product['productID'] ?>"
+                           name="price_<?= ($product['orderId'] ?? '') ?>"
                            readonly>
                 </td>
             </tr>

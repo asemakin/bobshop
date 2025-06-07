@@ -47,8 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Обрабатываем каждый товар из базы данных
             foreach ($products as $product) {
-                // Формируем имя поля для количества товара в форме
-                $fieldName = 'productName' . $product['productID'];
+                $fieldName = 'product_' . md5($product['productName']);
                 // Получаем количество заказанного товара (по умолчанию 0)
                 $quantity = isset($_POST[$fieldName]) ? (int)$_POST[$fieldName] : 0;
 
@@ -60,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     // Добавляем товар в массив заказанных товаров
                     $orderedItems[] = [
-                        'itemID' => $product['productID'], // ID товара
+                        'itemId' => ($product['id'] ?? ''), // ID товара
                         'name' => $product['productName'], // Название товара
                         'quantity' => $quantity,           // Количество
                         'price' => $price,                // Цена за единицу
@@ -116,19 +115,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
 
                 // Получаем ID созданного заказа
-                $orderID = $conn->lastInsertId();
+                $id = $conn->lastInsertId();
 
-                // Сохраняем каждый товар из заказа в таблицу orderitems
+                // Сохраняем каждый товар из заказа в таблицу orderItem
                 foreach ($orderedItems as $item) {
-                    $stmt = $conn->prepare("INSERT INTO `orderitems` (
+                    $stmt = $conn->prepare("INSERT INTO `orderItem` (
                         orderNumber, productID, productName, quantity, price
                     ) VALUES (
                         :orderNumber, :productID, :productName, :quantity, :price
                     )");
 
                     $stmt->execute([
-                        ':orderNumber' => $orderID,       // ID заказа
-                        ':productID' => $item['itemID'],  // ID товара
+                        ':orderNumber' => $id,       // ID заказа
+                        ':productID' => $item['itemId'],  // ID товара
                         ':productName' => $item['name'],  // Название товара
                         ':quantity' => $item['quantity'], // Количество
                         ':price' => $item['price']        // Цена
@@ -149,12 +148,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ];
 
                 if (!empty($find) && isset($sourceNames[$find])) {
-                    $stmt = $conn->prepare("INSERT INTO `orderReferralInfo` 
-        (orderID, sourceCode, sourceName) 
-        VALUES (:orderID, :code, :name)");
+                    $stmt = $conn->prepare("INSERT INTO `referralSource` 
+        (id, sourceName) 
+        VALUES (:id, :name)");
                     $stmt->execute([
-                        ':orderID' => $orderID,
-                        ':code' => $find,
+                        ':id' => $id,
                         ':name' => $sourceNames[$find]
                     ]);
                 }
@@ -182,7 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php
                 // Выводим основную информацию о заказе
                 echo "<p>Заказ обработан: " . date("H:i, d.m.Y") . "</p>";
-                echo "<p><strong>Номер вашего заказа: $orderID</strong></p>";
+                echo "<p><strong>Номер вашего заказа: $id</strong></p>";
                 echo "<p class='blue'>Адрес доставки: " . htmlspecialchars($address) . "</p>";
                 echo "<p class='blue'>Дата доставки: " . (!empty($deliveryDate) ? htmlspecialchars($deliveryDate) : 'не указана') . "</p>";
                 echo "<p class='blue'>Время доставки: " . (!empty($deliveryTime) ? htmlspecialchars($deliveryTime) : 'не указано') . "</p>";
@@ -223,7 +221,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         // Настройки письма
                         $mail->setFrom('warnawa80@gmail.com', 'Автозапчасти Боба Марли');
                         $mail->addAddress($email);
-                        $mail->Subject = "Ваш заказ #$orderID принят";
+                        $mail->Subject = "Ваш заказ #$id принят";
 
                         // HTML-содержимое письма
                         $mail->isHTML(true);
@@ -235,7 +233,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Подтверждение заказа #'.$orderID.'</title>
+    <title>Подтверждение заказа #'.$id.'</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -315,7 +313,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="container">
         <div class="header">
             <h2 style="margin:0;font-size:20px;">Автозапчасти Боба</h2>
-            <p style="margin:5px 0 0;font-size:16px;">Заказ #'.$orderID.'</p>
+            <p style="margin:5px 0 0;font-size:16px;">Заказ #'.$id.'</p>
         </div>
         
         <div class="content">
@@ -371,7 +369,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             
             <p style="text-align:center;">
-                <a href="https://bob-autoparts.ru/track?order='.$orderID.'" class="button">Отследить заказ</a>
+                <a href="https://bob-autoparts.ru/track?order='.$id.'" class="button">Отследить заказ</a>
             </p>
             
             <p>По вопросам звоните: <strong>+7 (123) 456-78-90</strong></p>
@@ -387,7 +385,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Текстовая версия письма
                         $mail->AltBody = "Автозапчасти Боба\n\n"
-                            . "Ваш заказ #$orderID\n\n"
+                            . "Ваш заказ #$id\n\n"
                             . "Товары:\n";
 
                         foreach ($orderedItems as $item) {
@@ -464,4 +462,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Если страница была загружена не через POST-запрос
     echo "<p class='error'>Неверный метод запроса. Пожалуйста, отправьте форму.</p>";
 }
+echo "<pre>POST данные: ";
+print_r($_POST);
+echo "</pre>";
+
 ?>
+
+

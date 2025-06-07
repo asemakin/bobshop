@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS orders (
                                       deliveryTime TIME,
                                       customerPhone VARCHAR(20),
                                       customerEmail VARCHAR(100),
-                                      referralSource VARCHAR(50),
+                                      referralSourceId VARCHAR(50),
                                       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP );
 
 SHOW  TABLES ;
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS orders (
                                       deliveryTime TIME,
                                       customerPhone VARCHAR(20),
                                       customerEmail VARCHAR(100),
-                                      referralSource VARCHAR(50),
+                                      referralSourceId VARCHAR(50),
                                       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP );
 
 CREATE DATABASE IF NOT EXISTS bob_auto_parts;
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS orders (
                                       deliveryTime TIME,
                                       customerPhone VARCHAR(20),
                                       customerEmail VARCHAR(100),
-                                      referralSource VARCHAR(50),
+                                      referralSourceId VARCHAR(50),
                                       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP );
 
 SELECT * FROM `order`;
@@ -97,29 +97,29 @@ CREATE TABLE IF NOT EXISTS order (
                                       deliveryTime TIME,
                                       customerPhone VARCHAR(20),
                                       customerEmail VARCHAR(100),
-                                      referralSource VARCHAR(50),
+                                      referralSourceId VARCHAR(50),
                                       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS order_items (
-                                           itemID INT AUTO_INCREMENT PRIMARY KEY,
+                                           itemId INT AUTO_INCREMENT PRIMARY KEY,
                                            id INT NOT NULL,
                                            productID INT NOT NULL,
                                            productName VARCHAR(100) NOT NULL,
                                            quantity INT NOT NULL,
                                            price DECIMAL(10, 2) NOT NULL,
-                                           FOREIGN KEY (id) REFERENCES order(id),
+                                           FOREIGN KEY (id) REFERENCES `order`(id),
                                            FOREIGN KEY (productID) REFERENCES1 warehouse(id)
 );
-SELECT * FROM orderItems;
+SELECT * FROM orderItem;
 SELECT * FROM warehouse;
-SELECT * FROM order;
+SELECT * FROM `order`;
 
-ALTER TABLE orderitems
-    DROP FOREIGN KEY orderitems_ibfk_2;
+ALTER TABLE orderItem
+    DROP FOREIGN KEY orderItem_ibfk_2;
 
-ALTER TABLE orderitems
-    ADD CONSTRAINT orderitems_ibfk_2
-        FOREIGN KEY (productID) REFERENCES warehouse(productID)
+ALTER TABLE orderItem
+    ADD CONSTRAINT orderItem_ibfk_2
+        FOREIGN KEY (productID) REFERENCES warehouse(id)
             ON DELETE CASCADE;
 
 
@@ -127,9 +127,9 @@ USE bob_auto_parts;
 
 SELECT * FROM warehouse;
 SELECT * FROM `order`;
-SELECT * FROM orderitems;
+SELECT * FROM orderItem;
 
-ALTER TABLE `orderitems`
+ALTER TABLE orderItem
     MODIFY COLUMN `productName` VARCHAR(255) NULL,
     MODIFY COLUMN `productID` INT NULL;
 
@@ -153,9 +153,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 USE bob_auto_parts;
 
 CREATE TABLE `orderReferralInfo` (
-                                       `orderID` int(11) NOT NULL,
+                                       `id` int(11) NOT NULL,
                                        `sourceCode` char(1) NOT NULL,
                                        `sourceName` varchar(50) NOT NULL,
-                                       PRIMARY KEY (`orderID`),
-                                       CONSTRAINT `fk_ori_order` FOREIGN KEY (`orderID`) REFERENCES `order` (`orderID`)
+                                       PRIMARY KEY (`id`),
+                                       CONSTRAINT `fk_ori_order` FOREIGN KEY (`id`) REFERENCES `order` (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

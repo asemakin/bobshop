@@ -496,7 +496,7 @@ function generateOrderNumber() {
         $conn->beginTransaction();
 
         // 1. Получаем текущий максимальный номер с блокировкой таблицы
-        $stmt = $conn->query("SELECT MAX(orderID) AS last_number FROM `order` FOR UPDATE");
+        $stmt = $conn->query("SELECT MAX(id) AS last_number FROM `order` FOR UPDATE");
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // 2. Генерируем следующий номер
