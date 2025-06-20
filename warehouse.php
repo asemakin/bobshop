@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
 if (isset($_GET['delete_id'])) {
     $id = (int)$_GET['delete_id']; // Приводим ID к целому числу
 
-    $stmt = $db->prepare("DELETE FROM warehouse WHERE productID = ?");
+    $stmt = $db->prepare("DELETE FROM warehouse WHERE productId = ?");
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {

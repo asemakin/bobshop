@@ -94,7 +94,7 @@ $products = $db->query("SELECT *, orderId AS productID FROM warehouse ORDER BY p
 
         while($product = $products->fetch_assoc()):
             // Используем ID товара вместо названия для формирования имени поля
-            $fieldName = 'productName' . ($product['id'] ?? '');  // Новый формат
+            $fieldName = 'productName' . ($product['orderId'] ?? '');  // Новый формат
             ?>
 
             <tr class="<?= $rowColors[$colorIndex % count($rowColors)] ?>">
