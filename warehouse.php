@@ -1,159 +1,248 @@
-
 <?php
-/*
- * Подключение к базе данных MySQL
- * Параметры: сервер, пользователь, пароль, имя базы данных
- * В случае ошибки подключения скрипт завершится с сообщением об ошибке
- */
 $db = new mysqli('localhost', 'root', '', 'bob_auto_parts');
 if ($db->connect_error) {
     die("Ошибка подключения: " . $db->connect_error);
 }
 
-/*
- * Обработка добавления нового товара
- * Проверяем, что запрос POST и есть параметр add_product
- */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
-    // Экранируем и проверяем входные данные
-    $name = $db->real_escape_string($_POST['name']);
-    $quantity = (int)$_POST['quantity']; // Приводим к целому числу
-    $price = (float)$_POST['price']; // Приводим к числу с плавающей точкой
-
-    // Подготавливаем SQL запрос с параметрами для безопасности
-    $stmt = $db->prepare("INSERT INTO warehouse (productName, quantity, price) VALUES (?, ?, ?)");
-    $stmt->bind_param("sid", $name, $quantity, $price); // s - строка, i - целое, d - дробное
-
-    if (!$stmt->execute()) {
-        echo "Ошибка при добавлении товара: " . $stmt->error;
-    } else {
-        // Перенаправляем чтобы избежать повторной отправки формы
-        header("Location: ".$_SERVER['PHP_SELF']);
-        exit;
-    }
-    $stmt->close();
-}
-
-/*
- * Обработка удаления товара
- * Проверяем наличие параметра delete_id в URL
- */
-if (isset($_GET['delete_id'])) {
-    $id = (int)$_GET['delete_id']; // Приводим ID к целому числу
-
-    $stmt = $db->prepare("DELETE FROM warehouse WHERE productId = ?");
-    $stmt->bind_param("i", $id);
-
-    if ($stmt->execute()) {
-        header("Location: ".$_SERVER['PHP_SELF']);
-        exit;
-    } else {
-        echo "Ошибка при удалении товара: " . $stmt->error;
-    }
-    $stmt->close();
-}
-
-/*
- * Обработка AJAX-запроса на обновление товара
- * Используется для редактирования прямо в таблице
- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
+    header('Content-Type: application/json');
+
     $id = (int)$_POST['product_id'];
     $field = $db->real_escape_string($_POST['field']);
-
-    // Для цены преобразуем в float, для других полей - экранируем строку
     $value = $field === 'price' ? (float)$_POST['value'] : $db->real_escape_string($_POST['value']);
 
-    // В зависимости от поля формируем разные запросы
     if ($field === 'productName') {
-        $stmt = $db->prepare("UPDATE warehouse SET productName = ? WHERE productID = ?");
+        $stmt = $db->prepare("UPDATE warehouse SET productName = ? WHERE orderId = ?");
         $stmt->bind_param("si", $value, $id);
     }
     elseif ($field === 'quantity') {
-        $value = (int)$value; // Дополнительная проверка для количества
-        $stmt = $db->prepare("UPDATE warehouse SET quantity = ? WHERE productID = ?");
+        $value = (int)$value;
+        $stmt = $db->prepare("UPDATE warehouse SET quantity = ? WHERE orderId = ?");
         $stmt->bind_param("ii", $value, $id);
     }
     elseif ($field === 'price') {
-        $stmt = $db->prepare("UPDATE warehouse SET price = ? WHERE productID = ?");
-        $stmt->bind_param("di", $value, $id); // d - для дробных чисел
+        $stmt = $db->prepare("UPDATE warehouse SET price = ? WHERE orderId = ?");
+        $stmt->bind_param("di", $value, $id);
     }
 
     if (isset($stmt)) {
         if ($stmt->execute()) {
-            echo "Успешно обновлено"; // Ответ для AJAX
+            echo json_encode(['status' => 'success']);
         } else {
-            echo "Ошибка при обновлении товара: " . $stmt->error;
+            echo json_encode(['status' => 'error', 'message' => $stmt->error]);
         }
         $stmt->close();
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Invalid field']);
     }
-
-    exit; // Завершаем выполнение для AJAX-запроса
+    exit;
 }
 
-// Получаем все товары из базы данных для отображения в таблице
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
+    $name = $db->real_escape_string($_POST['name']);
+    $quantity = (int)$_POST['quantity'];
+    $price = (float)$_POST['price'];
+
+    $stmt = $db->prepare("INSERT INTO warehouse (productName, quantity, price) VALUES (?, ?, ?)");
+    $stmt->bind_param("sid", $name, $quantity, $price);
+
+    if (!$stmt->execute()) {
+        die("Ошибка при добавлении товара: " . $stmt->error);
+    }
+    header("Location: ".$_SERVER['PHP_SELF']);
+    exit;
+}
+
+if (isset($_GET['delete_id'])) {
+    $id = (int)$_GET['delete_id'];
+
+    $stmt = $db->prepare("DELETE FROM warehouse WHERE orderId = ?");
+    $stmt->bind_param("i", $id);
+
+    if (!$stmt->execute()) {
+        die("Ошибка при удалении товара: " . $stmt->error);
+    }
+    header("Location: ".$_SERVER['PHP_SELF']);
+    exit;
+}
+
 $products = $db->query("SELECT * FROM warehouse ORDER BY productName");
 if (!$products) {
     die("Ошибка при получении товаров: " . $db->error);
 }
 ?>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Управление складом</title>
-    <!-- Подключаем внешние стили -->
-    <link rel="stylesheet" href="warehouse.css">
-    <?php include("time.php");?>
-</head>
-<body>
-        <h2 style="font-family: cursive; font-size: 30px; color: black;">
-            Управление складом
-        </h2>
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <title>Управление складом</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+            .editable {
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+            .editable:hover {
+                background-color: #f0f0f0;
+            }
+            .editing {
+                background-color: #fffacd;
+            }
+            .edit-input {
+                width: 100%;
+                padding: 5px;
+                box-sizing: border-box;
+            }
+            form {
+                margin-bottom: 20px;
+                background: #f5f5f5;
+                padding: 15px;
+                border-radius: 5px;
+            }
+            input, button {
+                padding: 8px;
+                margin-right: 10px;
+            }
+            button {
+                cursor: pointer;
+            }
+            .delete-btn {
+                color: red;
+                text-decoration: none;
+            }
+            .delete-btn:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+    <h2>Управление складом</h2>
 
-<!-- Форма для добавления новых товаров -->
-<form method="POST">
-    <input type="text" name="name" placeholder="Название товара" required>
-    <input type="number" name="quantity" placeholder="Количество" min="0" required>
-    <input type="number" name="price" placeholder="Цена" step="0.01" min="0" required>
-    <button type="submit" name="add_product">Добавить товар</button>
-</form>
+    <form method="POST">
+        <input type="text" name="name" placeholder="Название товара" required>
+        <input type="number" name="quantity" placeholder="Количество" min="0" required>
+        <input type="number" name="price" placeholder="Цена" step="0.01" min="0" required>
+        <button type="submit" name="add_product">Добавить товар</button>
+    </form>
 
-<!-- Таблица с товарами -->
-<table>
-    <thead>
-    <tr>
-        <th style="font-family: cursive; font-size: 20px; color: white;"> Товар </th>
-        <th style="font-family: cursive; font-size: 20px; color: white;"> Количество </th>
-        <th style="font-family: cursive; font-size: 20px; color: white;"> Цена </th>
-        <th style="font-family: cursive; font-size: 20px; color: white;"> Действия </th>
-    </tr>
-    </thead>
-    <tbody>
-    <?php while($product = $products->fetch_assoc()): ?>
-        <!-- Каждая строка содержит data-id с ID товара -->
-        <tr data-id="<?= $product['productID'] ?? null ?>">
-            <!-- Ячейки с классом editable можно редактировать -->
-            <td class="editable" data-field="productName"><?= htmlspecialchars($product['productName']) ?></td>
-            <td class="editable" data-field="quantity"><?= htmlspecialchars($product['quantity']) ?></td>
-            <td class="editable" data-field="price"><?= htmlspecialchars(number_format($product['price'], 2)) ?> $</td>
-            <td>
-                <!-- Ссылка для удаления товара с подтверждением -->
-                <a href="?delete_id=<?= $product['productID'] ?? null ?>"
-                   onclick="return confirm('Вы уверены, что хотите удалить этот товар?')">
-                    Удалить
-                </a>
-            </td>
+    <table>
+        <thead>
+        <tr>
+            <th>Товар</th>
+            <th>Количество</th>
+            <th>Цена</th>
+            <th>Действия</th>
         </tr>
-    <?php endwhile; ?>
-    </tbody>
-</table>
-         <!-- В конце body, перед закрывающим тегом </body> добавьте: -->
-         <script src="edit.js"></script>
+        </thead>
+        <tbody>
+        <?php while($product = $products->fetch_assoc()): ?>
+            <tr data-id="<?= $product['orderId'] ?>">
+                <td class="editable" data-field="productName"><?= htmlspecialchars($product['productName']) ?></td>
+                <td class="editable" data-field="quantity"><?= htmlspecialchars($product['quantity']) ?></td>
+                <td class="editable" data-field="price">$ <?= htmlspecialchars(number_format($product['price'], 2)) ?></td>
+                <td>
+                    <a href="?delete_id=<?= $product['orderId'] ?>" class="delete-btn"
+                       onclick="return confirm('Удалить этот товар?')">
+                        Удалить
+                    </a>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+        </tbody>
+    </table>
 
-</body>
-</html>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.editable').forEach(cell => {
+                cell.addEventListener('click', function() {
+                    if (this.classList.contains('editing')) return;
+
+                    const field = this.dataset.field;
+                    const productId = this.closest('tr').dataset.id;
+                    let originalValue = this.textContent.trim();
+
+                    if (field === 'price') {
+                        originalValue = originalValue.replace('$', '').trim();
+                    }
+
+                    const inputType = field === 'quantity' ? 'number' : 'text';
+                    const step = field === 'price' ? '0.01' : '1';
+                    this.innerHTML = `<input type="${inputType}"
+                                        value="${originalValue}"
+                                        step="${step}"
+                                        class="edit-input">`;
+                    this.classList.add('editing');
+
+                    const input = this.querySelector('.edit-input');
+                    input.focus();
+
+                    const saveEdit = () => {
+                        const newValue = input.value.trim();
+                        if (newValue !== originalValue) {
+                            fetch(window.location.href, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: `update_product=1&product_id=${productId}&field=${field}&value=${encodeURIComponent(newValue)}`
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.status === 'success') {
+                                        let displayValue = newValue;
+                                        if (field === 'price') {
+                                            displayValue = '$ ' + parseFloat(newValue).toFixed(2);
+                                        }
+                                        this.textContent = displayValue;
+                                    } else {
+                                        alert(data.message || 'Ошибка при обновлении');
+                                        this.textContent = field === 'price' ? '$ ' + parseFloat(originalValue).toFixed(2) : originalValue;
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    this.textContent = field === 'price' ? '$ ' + parseFloat(originalValue).toFixed(2) : originalValue;
+                                });
+                        } else {
+                            this.textContent = field === 'price' ? '$ ' + parseFloat(originalValue).toFixed(2) : originalValue;
+                        }
+                        this.classList.remove('editing');
+                    };
+
+                    input.addEventListener('blur', saveEdit);
+                    input.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            saveEdit();
+                        } else if (e.key === 'Escape') {
+                            this.textContent = field === 'price' ? '$ ' + parseFloat(originalValue).toFixed(2) : originalValue;
+                            this.classList.remove('editing');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+    </body>
+    </html>
 <?php
-// Закрываем соединение с базой данных
 $db->close();
 ?>
