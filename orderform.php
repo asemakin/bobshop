@@ -68,8 +68,8 @@ if (empty($orderItems)) {
 $taxRate = 0.10;
 $tax = $total * $taxRate;
 $totalWithTax = $total + $tax;
-$discount = 0; // Скидка по умолчанию
-$referralSourceId = 1; // Источник заказа по умолчанию
+$discount = 0.10; // Скидка по умолчанию
+$referralSourceId = 'find'; // Источник заказа по умолчанию
 
 // Сохранение заказа в БД
 $orderDate = date("Y-m-d H:i:s");
@@ -147,30 +147,73 @@ $db->close();
 <head>
     <meta charset="UTF-8">
     <title>Подтверждение заказа</title>
+    <link rel="stylesheet" href="orderform.css">
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
         h1, h2 { color: #2c3e50; }
         .order-info { background: #f9f9f9; padding: 15px; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #4a6fa5; color: white; }
-        .total-row { font-weight: bold; background-color: #f2f2f2; }
+        .order-items { margin: 20px 0; }
+        .order-items li { padding: 8px 0; border-bottom: 1px solid #eee; }
+        .highlight { background-color: #f0f8ff; padding: 10px; border-radius: 5px; }
         .print-btn { display: inline-block; padding: 8px 15px; background: #4a6fa5; color: white;
             text-decoration: none; border-radius: 4px; margin-top: 15px; }
+        .blue { color: #2c3e50; }
+        .total-sum { font-weight: bold; font-size: 1.1em; }
     </style>
 </head>
 <body>
-<!-- HTML-разметка остается без изменений -->
 <h1>Автозапчасти Боба Марли</h1>
 <h2>Ваш заказ успешно оформлен</h2>
 
 <div class="order-info">
-    <p><strong>Номер заказа:</strong> <?= $orderId ?></p>
-    <p><strong>Дата и время заказа:</strong> <?= date("d.m.Y H:i", strtotime($orderDate)) ?></p>
+    <p class="blue">
+        <strong>Номер заказа:</strong> <?= $orderId ?>
+        <br>
+        <strong>Дата и время заказа:</strong> <?= date("d.m.Y - H:i", strtotime($orderDate)) ?>
+    </p>
+
+    <h3>Состав заказа:</h3>
+    <div class="order-items">
+        <ul>
+            <?php foreach ($orderItems as $item): ?>
+                <li>
+                    <strong><?= htmlspecialchars($item['name']) ?></strong><br>
+                    Количество: <?= $item['qty'] ?> шт.<br>
+                    Цена за единицу: <?= number_format($item['price'], 2) ?> $<br>
+                    Сумма: <?= number_format($item['sum'], 2) ?> $
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+
+    <div class="highlight">
+        <p><strong>Общая стоимость товаров:</strong> <?= number_format($total, 2) ?> $</p>
+        <p><strong>Скидка (10%):</strong> -<?= number_format($total * $discount, 2) ?> $</p>
+        <p><strong>Сумма после скидки:</strong> <?= number_format($total * (1 - $discount), 2) ?> $</p>
+        <p><strong>Налог (10%):</strong> <?= number_format($tax, 2) ?> $</p>
+        <p class="total-sum"><strong>Итого к оплате:</strong> <?= number_format($totalWithTax, 2) ?> $</p>
+        <p style="font-family: cursive; font-size: 30px; color: black; text-align: center; font-style: italic;">
+            <strong><?=$referralSourceId['source']?></strong>
+        </p>
+    </div>
+    <p><strong>Адрес доставки:</strong> <?= htmlspecialchars($customerData['address']) ?></p>
+    <p><strong>Дата доставки:</strong> <?= htmlspecialchars($customerData['deliveryDate']) ?></p>
+    <p><strong>Время доставки:</strong> <?= htmlspecialchars($customerData['deliveryTime']) ?></p>
+    <p><strong>Ваш номер телефона:</strong> <?= htmlspecialchars($customerData['phone']) ?></p>
+    <p><strong>Ваша электронная почта:</strong> <?= htmlspecialchars($customerData['email']) ?></p>
+
 </div>
 
-<!-- ... остальная HTML-разметка без изменений ... -->
-
 <?php include("time.php"); ?>
+
+<footer>
+    <br>
+    <div style="text-align: center;">
+        <button class="grey" onclick="window.location.href='orderforms.php'">
+            К форме заказа
+        </button>
+    </div>
+    <br>
+</footer>
 </body>
 </html>
