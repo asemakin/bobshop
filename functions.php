@@ -476,6 +476,7 @@ function get_currency_rates_2(array $config = [])
     return ob_get_clean();
 }
 ?>
+
 <?php
 function generateOrderNumber() {
     $dbHost = 'localhost';

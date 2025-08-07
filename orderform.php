@@ -15,14 +15,28 @@ if ($_SERVER["REQUEST_METHOD"] != "POST") {
     die("Требуется POST-запрос");
 }
 
+// Получение и проверка источника
+if (empty($_POST['find'])) {
+    die("Пожалуйста, выберите вариант!");
+}
+
+$selectedOption = $_POST['find'] ?? '';
+$options = [
+    'a' => 'Вы постоянный клиент !!!',
+    'b' => 'Вы узнали о нас из ТВ рекламы !!!',
+    'c' => 'Вы узнали о нас из телефонного справочника !!!',
+    'd' => 'Вы узнали о нас от друзей и близких !!!'
+];
+
+$referralSourceText = $options[$selectedOption] ?? 'Неизвестно';
+
 // Получение и очистка данных формы
 $customerData = [
     'address' => trim($_POST['address'] ?? ''),
     'phone' => trim($_POST['tel'] ?? ''),
     'email' => trim($_POST['email'] ?? ''),
     'deliveryDate' => trim($_POST['deliveryDate'] ?? ''),
-    'deliveryTime' => trim($_POST['deliveryTime'] ?? ''),
-    'source' => trim($_POST['find'] ?? '')
+    'deliveryTime' => trim($_POST['deliveryTime'] ?? '')
 ];
 
 // Валидация обязательных полей
@@ -45,6 +59,10 @@ while($product = $products->fetch_assoc()) {
     $quantity = (int)($_POST[$qtyField] ?? 0);
 
     if ($quantity > 0) {
+        if ($quantity > $product['quantity']) {
+            die("Ошибка: недостаточно товара на складе для продукта " . htmlspecialchars($product['productName']));
+        }
+
         $price = (float)$product['price'];
         $sum = $quantity * $price;
 
@@ -65,16 +83,16 @@ if (empty($orderItems)) {
 }
 
 // Расчет налогов и итоговой суммы
+$discount = 0.10;
+$subTotal = $total;
+$totalAfterDiscount = $subTotal * (1 - $discount);
 $taxRate = 0.10;
-$tax = $total * $taxRate;
-$totalWithTax = $total + $tax;
-$discount = 0.10; // Скидка по умолчанию
-$referralSourceId = 'find'; // Источник заказа по умолчанию
+$tax = $totalAfterDiscount * $taxRate;
+$totalWithTax = $totalAfterDiscount + $tax;
 
 // Сохранение заказа в БД
 $orderDate = date("Y-m-d H:i:s");
 
-// Используем обратные кавычки для order (зарезервированное слово)
 $stmt = $db->prepare("INSERT INTO `order` (
     id, orderDate, subTotal, discount, tax, totalAmount, 
     deliveryAddress, deliveryDate, deliveryTime,
@@ -85,10 +103,9 @@ if (!$stmt) {
     die("Ошибка подготовки запроса: " . $db->error);
 }
 
-// Привязка параметров для основного заказа
-$stmt->bind_param("sddddsssssi",
+$stmt->bind_param("sddddssssss",
     $orderDate,
-    $total,
+    $subTotal,
     $discount,
     $tax,
     $totalWithTax,
@@ -97,7 +114,7 @@ $stmt->bind_param("sddddsssssi",
     $customerData['deliveryTime'],
     $customerData['phone'],
     $customerData['email'],
-    $referralSourceId
+    $referralSourceText
 );
 
 if (!$stmt->execute()) {
@@ -109,7 +126,6 @@ $stmt->close();
 
 // Сохранение позиций заказа
 foreach ($orderItems as $item) {
-    // Исправлено: 6 полей = 6 значений (NULL + 5 параметров)
     $stmt = $db->prepare("INSERT INTO `orderItem` (
         itemId, orderNumber, productId, productName, quantity, price
     ) VALUES (NULL, ?, ?, ?, ?, ?)");
@@ -118,7 +134,6 @@ foreach ($orderItems as $item) {
         die("Ошибка подготовки запроса товара: " . $db->error);
     }
 
-    // Исправлено: передаем productId из массива товаров
     $stmt->bind_param("iisid",
         $orderId,
         $item['productId'],
@@ -132,7 +147,6 @@ foreach ($orderItems as $item) {
     }
     $stmt->close();
 
-    // Обновление остатков на складе
     $updateStmt = $db->prepare("UPDATE warehouse SET quantity = quantity - ? WHERE orderId = ?");
     $updateStmt->bind_param("ii", $item['qty'], $item['productId']);
     $updateStmt->execute();
@@ -187,13 +201,13 @@ $db->close();
     </div>
 
     <div class="highlight">
-        <p><strong>Общая стоимость товаров:</strong> <?= number_format($total, 2) ?> $</p>
-        <p><strong>Скидка (10%):</strong> -<?= number_format($total * $discount, 2) ?> $</p>
-        <p><strong>Сумма после скидки:</strong> <?= number_format($total * (1 - $discount), 2) ?> $</p>
+        <p><strong>Общая стоимость товаров:</strong> <?= number_format($subTotal, 2) ?> $</p>
+        <p><strong>Скидка (10%):</strong> -<?= number_format($subTotal * $discount, 2) ?> $</p>
+        <p><strong>Сумма после скидки:</strong> <?= number_format($totalAfterDiscount, 2) ?> $</p>
         <p><strong>Налог (10%):</strong> <?= number_format($tax, 2) ?> $</p>
         <p class="total-sum"><strong>Итого к оплате:</strong> <?= number_format($totalWithTax, 2) ?> $</p>
         <p style="font-family: cursive; font-size: 30px; color: black; text-align: center; font-style: italic;">
-            <strong><?=$referralSourceId['source']?></strong>
+            <strong><?= htmlspecialchars($referralSourceText) ?></strong>
         </p>
     </div>
     <p><strong>Адрес доставки:</strong> <?= htmlspecialchars($customerData['address']) ?></p>
@@ -201,7 +215,6 @@ $db->close();
     <p><strong>Время доставки:</strong> <?= htmlspecialchars($customerData['deliveryTime']) ?></p>
     <p><strong>Ваш номер телефона:</strong> <?= htmlspecialchars($customerData['phone']) ?></p>
     <p><strong>Ваша электронная почта:</strong> <?= htmlspecialchars($customerData['email']) ?></p>
-
 </div>
 
 <?php include("time.php"); ?>
