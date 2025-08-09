@@ -1,232 +1,148 @@
 <?php
-// Настройки отображения ошибок
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Подключение к БД с обработкой ошибок
 $db = new mysqli('localhost', 'root', '', 'bob_auto_parts');
 if ($db->connect_error) {
     die("Ошибка подключения: " . $db->connect_error);
 }
 
-// Проверка метода запроса
-if ($_SERVER["REQUEST_METHOD"] != "POST") {
-    die("Требуется POST-запрос");
+$orderId = (int)($_GET['orderId'] ?? 0);
+if ($orderId <= 0) {
+    die("Неверный номер заказа");
 }
 
-// Получение и проверка источника
-if (empty($_POST['find'])) {
-    die("Пожалуйста, выберите вариант!");
+// Получаем заказ
+$order = $db->query("SELECT * FROM `order` WHERE id = $orderId")->fetch_assoc();
+if (!$order) {
+    die("Заказ не найден");
 }
 
-$selectedOption = $_POST['find'] ?? '';
-$options = [
-    'a' => 'Вы постоянный клиент !!!',
-    'b' => 'Вы узнали о нас из ТВ рекламы !!!',
-    'c' => 'Вы узнали о нас из телефонного справочника !!!',
-    'd' => 'Вы узнали о нас от друзей и близких !!!'
-];
-
-$referralSourceText = $options[$selectedOption] ?? 'Неизвестно';
-
-// Получение и очистка данных формы
-$customerData = [
-    'address' => trim($_POST['address'] ?? ''),
-    'phone' => trim($_POST['tel'] ?? ''),
-    'email' => trim($_POST['email'] ?? ''),
-    'deliveryDate' => trim($_POST['deliveryDate'] ?? ''),
-    'deliveryTime' => trim($_POST['deliveryTime'] ?? '')
-];
-
-// Валидация обязательных полей
-if (empty($customerData['address']) || empty($customerData['phone'])) {
-    die("Заполните адрес и телефон");
-}
-
-// Получение товаров со склада
-$products = $db->query("SELECT * FROM warehouse");
-if (!$products) {
-    die("Ошибка получения товаров: " . $db->error);
-}
-
-// Формирование списка заказанных товаров
+// Получаем товары заказа
 $orderItems = [];
-$total = 0;
-
-while($product = $products->fetch_assoc()) {
-    $qtyField = 'product_' . $product['orderId'];
-    $quantity = (int)($_POST[$qtyField] ?? 0);
-
-    if ($quantity > 0) {
-        if ($quantity > $product['quantity']) {
-            die("Ошибка: недостаточно товара на складе для продукта " . htmlspecialchars($product['productName']));
-        }
-
-        $price = (float)$product['price'];
-        $sum = $quantity * $price;
-
-        $orderItems[] = [
-            'name' => $product['productName'],
-            'qty' => $quantity,
-            'price' => $price,
-            'sum' => $sum,
-            'productId' => $product['orderId']
-        ];
-
-        $total += $sum;
-    }
-}
-
-if (empty($orderItems)) {
-    die("Не выбрано ни одного товара");
-}
-
-// Расчет налогов и итоговой суммы
-$discount = 0.10;
-$subTotal = $total;
-$totalAfterDiscount = $subTotal * (1 - $discount);
-$taxRate = 0.10;
-$tax = $totalAfterDiscount * $taxRate;
-$totalWithTax = $totalAfterDiscount + $tax;
-
-// Сохранение заказа в БД
-$orderDate = date("Y-m-d H:i:s");
-
-$stmt = $db->prepare("INSERT INTO `order` (
-    id, orderDate, subTotal, discount, tax, totalAmount, 
-    deliveryAddress, deliveryDate, deliveryTime,
-    customerPhone, customerEmail, referralSourceId
-) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-if (!$stmt) {
-    die("Ошибка подготовки запроса: " . $db->error);
-}
-
-$stmt->bind_param("sddddssssss",
-    $orderDate,
-    $subTotal,
-    $discount,
-    $tax,
-    $totalWithTax,
-    $customerData['address'],
-    $customerData['deliveryDate'],
-    $customerData['deliveryTime'],
-    $customerData['phone'],
-    $customerData['email'],
-    $referralSourceText
-);
-
-if (!$stmt->execute()) {
-    die("Ошибка сохранения заказа: " . $stmt->error);
-}
-
-$orderId = $stmt->insert_id;
-$stmt->close();
-
-// Сохранение позиций заказа
-foreach ($orderItems as $item) {
-    $stmt = $db->prepare("INSERT INTO `orderItem` (
-        itemId, orderNumber, productId, productName, quantity, price
-    ) VALUES (NULL, ?, ?, ?, ?, ?)");
-
-    if (!$stmt) {
-        die("Ошибка подготовки запроса товара: " . $db->error);
-    }
-
-    $stmt->bind_param("iisid",
-        $orderId,
-        $item['productId'],
-        $item['name'],
-        $item['qty'],
-        $item['price']
-    );
-
-    if (!$stmt->execute()) {
-        die("Ошибка сохранения товара: " . $stmt->error);
-    }
-    $stmt->close();
-
-    $updateStmt = $db->prepare("UPDATE warehouse SET quantity = quantity - ? WHERE orderId = ?");
-    $updateStmt->bind_param("ii", $item['qty'], $item['productId']);
-    $updateStmt->execute();
-    $updateStmt->close();
+$res = $db->query("SELECT * FROM `orderItem` WHERE orderNumber = $orderId");
+while ($row = $res->fetch_assoc()) {
+    $row['sum'] = $row['quantity'] * $row['price'];
+    $orderItems[] = $row;
 }
 
 $db->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Подтверждение заказа</title>
-    <link rel="stylesheet" href="orderform.css">
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
-        h1, h2 { color: #2c3e50; }
-        .order-info { background: #f9f9f9; padding: 15px; border-radius: 5px; }
-        .order-items { margin: 20px 0; }
-        .order-items li { padding: 8px 0; border-bottom: 1px solid #eee; }
-        .highlight { background-color: #f0f8ff; padding: 10px; border-radius: 5px; }
-        .print-btn { display: inline-block; padding: 8px 15px; background: #4a6fa5; color: white;
-            text-decoration: none; border-radius: 4px; margin-top: 15px; }
-        .blue { color: #2c3e50; }
-        .total-sum { font-weight: bold; font-size: 1.1em; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+        }
+        td {
+            padding: 10px;
+            text-align: center;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .summary {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .summary p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .btn {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            text-align: center;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
     </style>
 </head>
 <body>
-<h1>Автозапчасти Боба Марли</h1>
-<h2>Ваш заказ успешно оформлен</h2>
-
-<div class="order-info">
-    <p class="blue">
-        <strong>Номер заказа:</strong> <?= $orderId ?>
-        <br>
-        <strong>Дата и время заказа:</strong> <?= date("d.m.Y - H:i", strtotime($orderDate)) ?>
+<div class="container">
+    <h1>Автозапчасти Боба Марли</h1>
+    <h2>Спасибо за заказ!</h2>
+    <p style="text-align:center;">
+        <strong>Номер заказа:</strong> <?= $orderId ?><br>
+        <strong>Дата заказа:</strong> <?= date("d.m.Y - H:i", strtotime($order['orderDate'])) ?>
     </p>
 
-    <h3>Состав заказа:</h3>
-    <div class="order-items">
-        <ul>
-            <?php foreach ($orderItems as $item): ?>
-                <li>
-                    <strong><?= htmlspecialchars($item['name']) ?></strong><br>
-                    Количество: <?= $item['qty'] ?> шт.<br>
-                    Цена за единицу: <?= number_format($item['price'], 2) ?> $<br>
-                    Сумма: <?= number_format($item['sum'], 2) ?> $
-                </li>
-            <?php endforeach; ?>
-        </ul>
+    <h3>Состав заказа</h3>
+    <table>
+        <tr>
+            <th>Товар</th>
+            <th>Цена (₽)</th>
+            <th>Количество</th>
+            <th>Сумма (₽)</th>
+        </tr>
+        <?php foreach ($orderItems as $item): ?>
+            <tr>
+                <td><?= htmlspecialchars($item['productName']) ?></td>
+                <td><?= number_format($item['price'], 2, ',', ' ') ?></td>
+                <td><?= $item['quantity'] ?></td>
+                <td><?= number_format($item['sum'], 2, ',', ' ') ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
+
+    <div class="summary">
+        <p><strong>Общая стоимость:</strong> <?= number_format($order['subTotal'], 2, ',', ' ') ?> ₽</p>
+        <p><strong>Скидка (10%):</strong> -<?= number_format($order['subTotal'] * $order['discount'], 2, ',', ' ') ?> ₽</p>
+        <p><strong>Налог (10%):</strong> <?= number_format($order['tax'], 2, ',', ' ') ?> ₽</p>
+        <p><strong>Итого к оплате:</strong> <?= number_format($order['totalAmount'], 2, ',', ' ') ?> ₽</p>
+        <p><strong><?= htmlspecialchars($order['referralSourceId']) ?></strong></p>
     </div>
 
-    <div class="highlight">
-        <p><strong>Общая стоимость товаров:</strong> <?= number_format($subTotal, 2) ?> $</p>
-        <p><strong>Скидка (10%):</strong> -<?= number_format($subTotal * $discount, 2) ?> $</p>
-        <p><strong>Сумма после скидки:</strong> <?= number_format($totalAfterDiscount, 2) ?> $</p>
-        <p><strong>Налог (10%):</strong> <?= number_format($tax, 2) ?> $</p>
-        <p class="total-sum"><strong>Итого к оплате:</strong> <?= number_format($totalWithTax, 2) ?> $</p>
-        <p style="font-family: cursive; font-size: 30px; color: black; text-align: center; font-style: italic;">
-            <strong><?= htmlspecialchars($referralSourceText) ?></strong>
-        </p>
-    </div>
-    <p><strong>Адрес доставки:</strong> <?= htmlspecialchars($customerData['address']) ?></p>
-    <p><strong>Дата доставки:</strong> <?= htmlspecialchars($customerData['deliveryDate']) ?></p>
-    <p><strong>Время доставки:</strong> <?= htmlspecialchars($customerData['deliveryTime']) ?></p>
-    <p><strong>Ваш номер телефона:</strong> <?= htmlspecialchars($customerData['phone']) ?></p>
-    <p><strong>Ваша электронная почта:</strong> <?= htmlspecialchars($customerData['email']) ?></p>
-</div>
+    <h3>Доставка</h3>
+    <p><strong>Адрес:</strong> <?= htmlspecialchars($order['deliveryAddress']) ?></p>
+    <p><strong>Дата:</strong> <?= htmlspecialchars($order['deliveryDate']) ?></p>
+    <p><strong>Время:</strong> <?= htmlspecialchars($order['deliveryTime']) ?></p>
+    <p><strong>Телефон:</strong> <?= htmlspecialchars($order['customerPhone']) ?></p>
+    <p><strong>Email:</strong> <?= htmlspecialchars($order['customerEmail']) ?></p>
 
-<?php include("time.php"); ?>
-
-<footer>
-    <br>
     <div style="text-align: center;">
-        <button class="grey" onclick="window.location.href='orderforms.php'">
-            К форме заказа
-        </button>
+        <a href="orderforms.php" class="btn">Сделать новый заказ</a>
     </div>
-    <br>
-</footer>
+</div>
 </body>
 </html>
