@@ -243,10 +243,10 @@ $products = $db->query("SELECT * FROM warehouse ORDER BY productName");
             <td>Как вы нас нашли?</td>
             <td>
                 <select multiple class="fill" name="find" tabindex="9">
-                    <option value="a">Вы постоянный клиент</option>
-                    <option value="b">ТВ реклама</option>
-                    <option value="c">Телефонный справочник</option>
-                    <option value="d">Сарафанное радио</option>
+                    <option id="1" value="a">Вы постоянный клиент</option>
+                    <option id="2" value="b">ТВ реклама</option>
+                    <option id="3" value="c">Телефонный справочник</option>
+                    <option id="4" value="d">Сарафанное радио</option>
                 </select>
             </td>
         </tr>
