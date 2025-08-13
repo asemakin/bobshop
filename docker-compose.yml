@@ -1,0 +1,35 @@
+services:
+  db:
+    image: mariadb:11.4
+    container_name: bobshop-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_DATABASE: bob_auto_parts
+      MARIADB_USER: bob
+      MARIADB_PASSWORD: bobpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d:ro
+      - db_data:/var/lib/mysql
+
+  php:
+    build:
+      context: ./docker/php
+    container_name: bobshop-php
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_USER: bob
+      DB_PASS: bobpass
+      DB_NAME: bob_auto_parts
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+
+volumes:
+  db_data:
