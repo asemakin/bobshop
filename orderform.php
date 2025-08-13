@@ -3,10 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-$db = new mysqli('localhost', 'root', '', 'bob_auto_parts');
-if ($db->connect_error) {
-    die("Ошибка подключения: " . $db->connect_error);
-}
+require_once __DIR__ . '/db_connect.php';
 
 $orderId = (int)($_GET['orderId'] ?? 0);
 if ($orderId <= 0) {

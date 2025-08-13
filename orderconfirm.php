@@ -5,10 +5,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // === Подключение к базе данных ===
-$db = new mysqli('localhost', 'root', '', 'bob_auto_parts');
-if ($db->connect_error) {
-    die("Ошибка подключения: " . $db->connect_error);
-}
+require_once __DIR__ . '/db_connect.php';
 
 // === Проверяем метод запроса ===
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
