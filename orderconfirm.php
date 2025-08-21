@@ -140,4 +140,4 @@ $db->close();
 // === Перенаправляем на страницу подтверждения ===
 header("Location: orderform.php?orderId=" . $orderId);
 exit;
-?>
+
