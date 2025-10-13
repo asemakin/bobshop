@@ -141,7 +141,7 @@ $db->close();
     <p><strong>Email:</strong> <?= htmlspecialchars($order['customerEmail']) ?></p>
 
     <div style="text-align: center;">
-        <a href="orderforms.php" class="btn">Сделать новый заказ</a>
+        <a href="orderForms.php" class="btn">Сделать новый заказ</a>
     </div>
 </div>
 </body>

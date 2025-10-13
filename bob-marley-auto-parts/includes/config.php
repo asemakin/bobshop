@@ -17,8 +17,6 @@ define('DB_PASS', '');
 // Базовый URL сайта
 define('BASE_URL', 'http://localhost/bob-marley-auto-parts');
 
-// Инициализация сессии
-session_start();
 
 // Создание подключения к базе данных
 try {

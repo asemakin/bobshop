@@ -80,7 +80,23 @@ if (empty($orderItems)) {
 }
 
 // === Расчёт итогов ===
-$discount = 0.10;
+// === ЛОГИКА СКИДКИ ===
+
+// === Получаем скидку из таблицы настроек ===
+$settings = [];
+$res = $db->query("SELECT settingKey, settingValue FROM `settings`");
+while ($row = $res->fetch_assoc()) {
+    $settings[$row['settingKey']] = $row['settingValue'];
+}
+
+$discountThreshold = (float)$settings['discountThreshold'];
+$discountRate = (float)$settings['discountRate'];
+$discount = 0.0;
+
+if ($total >= $discountThreshold) {
+    $discount = $discountRate;
+}
+
 $subTotal = $total;
 $totalAfterDiscount = $subTotal * (1 - $discount);
 $taxRate = 0.10;

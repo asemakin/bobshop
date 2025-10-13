@@ -1,289 +1,131 @@
 <?php
-/**
- * Подключение к базе данных MySQL
- * Параметры: (хост, пользователь, пароль, база данных)
- */
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 $db = new mysqli('localhost', 'root', '', 'bob_auto_parts');
 if ($db->connect_error) {
-    // Если не удалось подключиться — выводим ошибку и прерываем работу
     die("Ошибка подключения: " . $db->connect_error);
 }
 
-/**
- * Обработка отправки формы заказа
- */
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-    // Получаем список товаров на складе
-    $products = $db->query("SELECT orderId, productName, quantity FROM warehouse");
-
-    // Массив для хранения остатков товаров
-    $stock = array();
-
-    // Заполняем массив остатками и названиями товаров
-    while($row = $products->fetch_assoc()) {
-        $stock[$row['orderId']] = array(
-            'quantity' => $row['quantity'],
-            'name' => $row['productName']
-        );
-    }
-
-    // Перебираем все данные, отправленные формой
-    foreach ($_POST as $key => $value) {
-        // Ищем поля, которые начинаются с "product_" и имеют количество > 0
-        if (strpos($key, 'product_') === 0 && $value > 0) {
-            $productId = substr($key, 8); // Получаем ID товара (после "product_")
-            $orderedQuantity = (int)$value; // Приводим к целому
-
-            // Проверяем, есть ли товар на складе
-            if (isset($stock[$productId])) {
-                // Если заказанное количество больше остатка — ошибка
-                if ($orderedQuantity > $stock[$productId]['quantity']) {
-                    die("Ошибка: Недостаточно товара '{$stock[$productId]['name']}' на складе. Доступно: {$stock[$productId]['quantity']} шт.");
-                }
-            }
-        }
-    }
-
-    /**
-     * Здесь можно добавить сохранение заказа:
-     * 1. Записать данные в таблицу `orders`
-     * 2. Уменьшить количество на складе в таблице `warehouse`
-     */
+// Получаем все товары для каталога
+$productsRes = $db->query("SELECT orderId, productName, price, quantity FROM warehouse ORDER BY productName");
+$products = [];
+while($row = $productsRes->fetch_assoc()) {
+    $products[] = $row;
 }
-
-// Запрашиваем все товары для вывода в форме
-$products = $db->query("SELECT * FROM warehouse ORDER BY productName");
+$db->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Автозапчасти Боба Марли</title>
-
-    <!-- Подключаем внешний CSS -->
-    <link rel="stylesheet" href="orderform.css">
-
-    <!-- Подключаем jQuery и маску ввода -->
+    <title>Каталог автозапчастей Боба Марли</title>
+    <link rel="stylesheet" href="catalog.css">
     <script src="/jquery-3.6.0.min.js"></script>
-    <script src="/jquery.inputmask.min.js"></script>
-
-    <!-- Стили кнопок и некоторых элементов -->
     <style>
-        .blue, .red, .grey {
-            padding: 6px 12px;
-            font-size: 12px;
-            border: none;
-            cursor: pointer;
-            color: white;
-            border-radius: 4px;
-            margin: 3px;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 0 rgba(0,0,0,0.1);
-            font-weight: bold;
-            text-transform: uppercase;
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5dc;
+            color: #333;
+            margin: 0;
         }
-        .blue { background-color: #4a6fa5; }
-        .blue:hover { background-color: #3a5a8f; transform: translateY(-1px); }
-        .red { background-color: #d9534f; }
-        .red:hover { background-color: #c9302c; transform: translateY(-1px); }
-        .grey { background-color: #5a6268; }
-        .grey:hover { background-color: #4a5258; transform: translateY(-1px); }
-        .button-pressed {
-            transform: translateY(3px) !important;
-            box-shadow: none !important;
+        h1 { text-align: center; font-family: cursive; color: #2e8b57; margin: 20px 0; }
+        .catalog { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 20px; }
+        .productCard {
+            background: #fff8dc;
+            border: 2px solid #2e8b57;
+            border-radius: 10px;
+            width: 220px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
         }
-        .discount-section {
-            background-color: #fffacd;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-        }
+        .productCard:hover { transform: translateY(-5px); }
+        .productCard img { max-width: 100%; height: auto; border-radius: 5px; }
+        .productCard h3 { font-size: 18px; color: #000; margin: 10px 0; }
+        .productCard p { margin: 5px 0; }
+        .addBtn { background-color: #4a6fa5; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .addBtn:hover { background-color: #3a5a8f; }
+        .cart { position: fixed; top: 20px; right: 20px; width: 300px; background: #fffacd; border: 2px solid #2e8b57; padding: 15px; border-radius: 10px; }
+        .cart h2 { text-align: center; margin-top: 0; }
+        .cartItem { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .checkoutBtn { background-color: #d9534f; color: white; border: none; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 5px; margin-top: 10px; }
+        .checkoutBtn:hover { background-color: #c9302c; }
     </style>
-
-    <script>
-        // Функция проверки, чтобы нельзя было заказать больше, чем есть на складе
-        function validateQuantity(input, max) {
-            if (parseInt(input.value) > max) {
-                input.value = max;
-                alert('Нельзя заказать больше чем есть на складе! Максимум: ' + max);
-            }
-        }
-
-        // Проверка скидочного кода
-        function applyDiscount() {
-            const discountCode = document.getElementById('discountCode')?.value;
-            if (discountCode === 'BOB10') {
-                alert('Скидка 10% применена!');
-                return true;
-            } else if (discountCode) {
-                alert('Неверный код скидки');
-                return false;
-            }
-            return true;
-        }
-
-        // Валидация перед отправкой формы
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelector('form').addEventListener('submit', function(e) {
-                // Проверка кода скидки
-                if (!applyDiscount()) {
-                    e.preventDefault();
-                    return;
-                }
-
-                // Проверка, выбран ли хотя бы один товар
-                const quantityInputs = document.querySelectorAll('input[type="number"]');
-                let hasItems = false;
-
-                quantityInputs.forEach(input => {
-                    if (parseInt(input.value) > 0) {
-                        hasItems = true;
-                    }
-                });
-
-                if (!hasItems) {
-                    e.preventDefault();
-                    alert('Пожалуйста, выберите хотя бы один товар!');
-                }
-            });
-        });
-    </script>
 </head>
 <body>
-<div>
-    <h1 style="font-family: cursive; font-size: 30px; color: black; text-align: center; font-style: italic;">
-        Форма заказа
-    </h1>
+<h1>Каталог автозапчастей Боба Марли</h1>
+
+<div class="catalog">
+    <?php foreach($products as $product): ?>
+        <div class="productCard" data-id="<?= $product['orderId'] ?>" data-price="<?= $product['price'] ?>" data-name="<?= htmlspecialchars($product['productName']) ?>">
+            <img src="images/<?= htmlspecialchars($product['productImage'] ?? 'default.png') ?>" alt="<?= htmlspecialchars($product['productName']) ?>">
+            <h3><?= htmlspecialchars($product['productName']) ?></h3>
+            <p>Цена: <?= number_format($product['price'], 2) ?> ₽</p>
+            <p>В наличии: <?= $product['quantity'] ?> шт.</p>
+            <input type="number" class="quantityInput" min="1" max="<?= $product['quantity'] ?>" value="1" style="width:50px;">
+            <button class="addBtn">Добавить в корзину</button>
+        </div>
+    <?php endforeach; ?>
 </div>
 
-<form action="orderconfirm.php" method="post">
-    <table class="order-table">
-        <tr bgcolor="#d3d3d3">
-            <td class="center">Товар</td>
-            <td class="center">Количество</td>
-            <td class="center">Цена</td>
-        </tr>
-        <?php
-        // Цвета для чередования строк
-        $rowColors = ['aqua-bg', 'gold-bg', 'lightgreen-bg'];
-        $colorIndex = 0;
-        $tabIndex = 4;
-
-        // Выводим список товаров
-        while($product = $products->fetch_assoc()):
-            $fieldName = 'product_' . $product['orderId'];
-            ?>
-            <tr class="<?= $rowColors[$colorIndex % count($rowColors)] ?>">
-                <td><?= htmlspecialchars($product['productName']) ?></td>
-                <td>
-                    <input style="font-family: cursive; font-size: 13px; color: firebrick;"
-                           class="fill"
-                           type="number"
-                           name="<?= $fieldName ?>"
-                           placeholder="На складе: <?= $product['quantity'] ?> шт."
-                           min="0"
-                           max="<?= $product['quantity'] ?>"
-                           onchange="validateQuantity(this, <?= $product['quantity'] ?>)"
-                           tabindex="<?= $tabIndex ?>">
-                </td>
-                <td>
-                    <input class="fill"
-                           value="$ <?= number_format($product['price'], 2) ?>"
-                           readonly>
-                    <input type="hidden" name="product_id_<?= $product['orderId'] ?>"
-                           value="<?= $product['orderId'] ?>">
-                </td>
-            </tr>
-            <?php
-            $colorIndex++;
-            $tabIndex++;
-        endwhile;
-        ?>
-        <!-- Блок ввода адреса -->
-        <tr class="gold-bg">
-            <td>Адрес доставки</td>
-            <td>
-                <input class="fill" type="text" name="address" required autofocus tabindex="1">
-            </td>
-        </tr>
-        <!-- Дата доставки -->
-        <tr class="lightgreen-bg">
-            <td>Дата доставки</td>
-            <td>
-                <input class="fill" type="date" name="deliveryDate" tabindex="7">
-            </td>
-        </tr>
-        <!-- Время доставки -->
-        <tr class="gold-bg">
-            <td>Время доставки</td>
-            <td>
-                <input class="fill" type="time" name="deliveryTime" tabindex="8">
-            </td>
-        </tr>
-        <!-- Телефон -->
-        <tr class="lightgreen-bg">
-            <td>Ваш номер телефона</td>
-            <td>
-                <input class="fill" type="text" name="tel" id="phoneInput"
-                       placeholder="+7-(XXX)-XXX-XX-XX" required tabindex="2">
-            </td>
-        </tr>
-        <!-- Email -->
-        <tr class="lightgreen-bg">
-            <td>Ваша электронная почта</td>
-            <td>
-                <input class="fill" type="email" name="email" required tabindex="3">
-            </td>
-        </tr>
-        <!-- Источник информации -->
-        <tr>
-            <td>Как вы нас нашли?</td>
-            <td>
-                <select multiple class="fill" name="find" tabindex="9">
-                    <option id="1" value="a">Вы постоянный клиент</option>
-                    <option id="2" value="b">ТВ реклама</option>
-                    <option id="3" value="c">Телефонный справочник</option>
-                    <option id="4" value="d">Сарафанное радио</option>
-                </select>
-            </td>
-        </tr>
-        <!-- Кнопки отправки -->
-        <tr>
-            <td colspan="2">
-                <button class="blue" type="submit">Отправить заказ</button>
-                <button class="red" type="reset">Сбросить</button>
-            </td>
-        </tr>
-    </table>
-</form>
-
-<!-- Кнопка перехода на страницу стоимости доставки -->
-<div style="text-align: center;">
-    <button class="grey" onclick="window.location.href='order_delivery.php'">
-        Стоимость доставки
-    </button>
+<div class="cart">
+    <h2>Корзина</h2>
+    <div id="cartItems"></div>
+    <p><strong>Итого: </strong><span id="cartTotal">0</span> ₽</p>
+    <button class="checkoutBtn" onclick="proceedCheckout()">Оформить заказ</button>
 </div>
 
 <script>
-    $(document).ready(function(){
-        // Маска ввода телефона
-        $('#phoneInput').inputmask('+7-(999)-999-99-99');
+    let cart = {};
 
-        // Анимация нажатия кнопок
-        const buttons = document.querySelectorAll('.blue, .red, .grey');
-        buttons.forEach(button => {
-            button.addEventListener('mousedown', () => button.classList.add('button-pressed'));
-            button.addEventListener('mouseup', () => button.classList.remove('button-pressed'));
-            button.addEventListener('mouseleave', () => button.classList.remove('button-pressed'));
-            button.addEventListener('touchstart', () => button.classList.add('button-pressed'));
-            button.addEventListener('touchend', () => button.classList.remove('button-pressed'));
-        });
+    function updateCartDisplay() {
+        const cartItemsDiv = $('#cartItems');
+        cartItemsDiv.empty();
+        let total = 0;
+        for (const id in cart) {
+            const item = cart[id];
+            total += item.price * item.qty;
+            cartItemsDiv.append(`<div class="cartItem">${item.name} x ${item.qty} = ${item.price*item.qty} ₽ <button onclick="removeItem(${id})">❌</button></div>`);
+        }
+        $('#cartTotal').text(total.toFixed(2));
+    }
+
+    function removeItem(id) {
+        delete cart[id];
+        updateCartDisplay();
+    }
+
+    $('.addBtn').click(function() {
+        const card = $(this).closest('.productCard');
+        const id = card.data('id');
+        const name = card.data('name');
+        const price = parseFloat(card.data('price'));
+        const qty = parseInt(card.find('.quantityInput').val());
+
+        if(cart[id]) {
+            cart[id].qty += qty;
+        } else {
+            cart[id] = {name:name, price:price, qty:qty};
+        }
+        updateCartDisplay();
     });
-</script>
 
-<?php include("time.php"); ?>
+    function proceedCheckout() {
+        if(Object.keys(cart).length === 0) {
+            alert('Корзина пуста!');
+            return;
+        }
+
+        const form = $('<form action="orderConfirm.php" method="post"></form>');
+        for(const id in cart) {
+            form.append(`<input type="hidden" name="product_${id}" value="${cart[id].qty}">`);
+        }
+        $('body').append(form);
+        form.submit();
+    }
+</script>
 </body>
 </html>
