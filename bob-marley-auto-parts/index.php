@@ -4,8 +4,10 @@
 // ЗАПУСКАЕМ СЕССИЮ В НАЧАЛЕ ФАЙЛА
 session_start();
 
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once 'includes/init.php';
+require_once 'includes/imageFunctions.php'; // ← ДОБАВЬ ЭТУ СТРОКУ
+//require_once 'includes/config.php';
+//require_once 'includes/functions.php';
 
 // Используем новую функцию для популярных товаров
 $popularProducts = getPopularProducts(3);
@@ -51,11 +53,24 @@ $categories = getCategories();
 
                     <?php foreach ($popularProducts as $product): ?>
                         <div class="productCard">
-                            <!-- КАРТИНКА ТОВАРА (АВТОМАТИЧЕСКАЯ EMOJI) -->
-                            <div class="productImage" style="background: <?php echo getProductColor($product['categoryId']); ?>;
-                                    color: white; display: flex; align-items: center; justify-content: center;
-                                    font-size: 3rem; border-radius: 8px; height: 200px; border: 3px solid #f9a602;">
-                                <?php echo getProductImage($product); ?>
+
+                            <!-- КАРТИНКА ТОВАРА (РЕАЛЬНЫЕ ФОТО) -->
+                            <div class="productImage" style="border-radius: 8px; height: 200px; border: 3px solid #f9a602; overflow: hidden;">
+                                <?php
+                                echo getProductImageHtml(
+                                        $product['image'],
+                                        $product['name'],
+                                        'product-image'
+                                );
+                                ?>
+                                <style>
+                                    .product-image {
+                                        width: 100%;
+                                        height: 100%;
+                                        object-fit: cover;
+                                        object-position: center;
+                                    }
+                                </style>
                             </div>
 
                             <h3 class="productTitle"><?php echo htmlspecialchars($product['name']); ?></h3>

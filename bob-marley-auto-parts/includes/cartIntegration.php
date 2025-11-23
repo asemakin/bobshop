@@ -4,11 +4,20 @@
  * Bob Marley Auto Parts
  */
 
+// ПОДКЛЮЧАЕМ КОНФИГУРАЦИЮ БАЗЫ ДАННЫХ
+require_once __DIR__ . '/config.php';
+
 /**
  * Сохранение корзины пользователя в базу данных
  */
 function saveUserCart($userId, $cartItems) {
     global $pdo;
+
+    // Проверяем, что PDO доступен
+    if ($pdo === null) {
+        error_log("PDO is not available in saveUserCart");
+        return false;
+    }
 
     try {
         // Преобразуем корзину в JSON для хранения
@@ -41,6 +50,12 @@ function saveUserCart($userId, $cartItems) {
  */
 function loadUserCart($userId) {
     global $pdo;
+
+    // Проверяем, что PDO доступен
+    if ($pdo === null) {
+        error_log("PDO is not available in loadUserCart");
+        return [];
+    }
 
     try {
         $stmt = $pdo->prepare("SELECT cartData FROM userCarts WHERE userId = ?");
@@ -91,12 +106,17 @@ function saveCartOnLogout($userId) {
     }
 }
 
-
 /**
  * Очистка корзины пользователя
  */
 function clearUserCart($userId) {
     global $pdo;
+
+    // Проверяем, что PDO доступен
+    if ($pdo === null) {
+        error_log("PDO is not available in clearUserCart");
+        return false;
+    }
 
     try {
         $stmt = $pdo->prepare("DELETE FROM userCarts WHERE userId = ?");
@@ -107,4 +127,3 @@ function clearUserCart($userId) {
         return false;
     }
 }
-

@@ -1,9 +1,11 @@
 <?php
+
+require_once '../includes/init.php';
 // Подключаем необходимые файлы
 require_once '../includes/config.php';
-require_once '../includes/functions.php';
+//require_once '../includes/functions.php';
 require_once '../includes/userAuth.php';
-require_once '../includes/sessionManager.php';
+//require_once '../includes/sessionManager.php';
 
 // Если пользователь уже авторизован, перенаправляем на главную
 if (SessionManager::isUserLoggedIn()) {

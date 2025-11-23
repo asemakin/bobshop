@@ -1,7 +1,9 @@
 <?php
 session_start();
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once 'includes/init.php';
+require_once 'includes/imageFunctions.php'; // ← ДОБАВЬ ЭТУ СТРОКУ
+//require_once 'includes/config.php';
+//require_once 'includes/functions.php';
 
 // ПОЛУЧАЕМ ID ТОВАРА ИЗ АДРЕСНОЙ СТРОКИ
 $productId = isset($_GET['id']) ? intval($_GET['id']) : 0;

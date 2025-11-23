@@ -1,9 +1,12 @@
 <?php
 session_start();
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
-require_once 'includes/sessionManager.php';
-require_once 'includes/cartIntegration.php';
+require_once 'includes/init.php';
+require_once 'includes/imageFunctions.php'; // ← ДОБАВЬ ЭТУ СТРОКУ
+
+//require_once 'includes/config.php';
+//require_once 'includes/functions.php';
+//require_once 'includes/sessionManager.php';
+//require_once 'includes/cartIntegration.php';
 
 // Обработка действий с корзиной
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -114,11 +117,55 @@ $cart = getCart();
             <div style="margin-bottom: 2rem;">
                 <?php foreach ($cart['items'] as $item): ?>
                     <div class="cartItem">
+
                         <!-- Картинка товара в корзине -->
-                        <div class="cartItemImage" style="background: <?php echo getProductColor($item['categoryId']); ?>;
-                                color: white; display: flex; align-items: center; justify-content: center;
-                                font-size: 2rem; border-radius: 5px; min-width: 80px; min-height: 80px; border: 2px solid #f9a602;">
-                            <?php echo getProductImage($item); ?>
+                        <!-- КАРТИНКА ТОВАРА (РЕАЛЬНЫЕ ФОТО) -->
+
+                        <div class="productImage" style="
+    border-radius: 8px;           /* Скругление углов: 0 = квадрат, больше = круглее */
+    height: 100px;                /* Высота блока: можно ставить любые числа (150px, 200px) */
+    width: 120px;                 /* Ширина блока: можно ставить любые числа */
+    border: 3px solid #f9a602;    /* Рамка: 3px = толщина, solid = сплошная, #f9a602 = цвет */
+    overflow: hidden;             /* Скрывает части фото которые вылезают за границы */
+    display: inline-block;        /* Блок становится как слово в тексте */
+    background: white;            /* Цвет фона внутри блока */
+    padding: 3px;                 /* Отступ между рамкой и фото */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Тень: 0=смещение по X, 2px=по Y, 5px=размытие */
+">
+                            <?php
+                            echo getProductImageHtml(
+                                    $item['image'],           /* Путь к файлу фото из базы данных */
+                                    $item['name'],            /* Название товара для подсказки при наведении */
+                                    'product-image'           /* Класс для стилизации фото */
+                            );
+                            ?>
+                            <style>
+                                /* Стили для настоящих фото товаров */
+                                .product-image {
+                                    width: 100%;          /* Фото растягивается на всю ширину блока */
+                                    height: 100%;         /* Фото растягивается на всю высоту блока */
+                                    object-fit: cover;    /* cover = заполняет весь блок обрезая края */
+                                    /* contain = всё фото видно но могут быть пустые места */
+                                    /* fill = растягивает искажая пропорции */
+                                    object-position: center; /* center = фото центрируется */
+                                    /* top = фото прижимается к верху */
+                                    /* left = фото прижимается к левому краю */
+                                    display: block;       /* block = фото занимает всю строку */
+                                }
+
+                                /* Стили когда фото нет и показывается emoji */
+                                .product-image.emojiFallback {
+                                    width: 100%;          /* Emoji контейнер на всю ширину */
+                                    height: 100%;         /* Emoji контейнер на всю высоту */
+                                    display: flex;        /* Включает гибкое расположение содержимого */
+                                    align-items: center;  /* Выравнивает emoji по центру вертикально */
+                                    justify-content: center; /* Выравнивает emoji по центру горизонтально */
+                                    font-size: 1.8rem;    /* Размер emoji: 1rem = 16px, 2rem = 32px */
+                                    background: linear-gradient(135deg, #1a4721, #2d5a2d); /* Плавный переход цвета */
+                                    color: white;         /* Цвет emoji */
+                                    margin: 0;            /* Убирает отступы вокруг emoji */
+                                }
+                            </style>
                         </div>
 
                         <!-- Информация о товаре -->

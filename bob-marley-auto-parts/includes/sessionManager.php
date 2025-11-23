@@ -4,19 +4,10 @@
  * Управление пользовательскими сессиями и авторизацией
  */
 
-// Проверяем, не запущена ли уже сессия
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Подключаем интеграцию корзины
-require_once 'cartIntegration.php';
-
 class SessionManager {
 
     /**
      * Начало сессии пользователя после успешного входа
-     * @param array $userData - данные пользователя
      */
     public static function startUserSession($userData) {
         $_SESSION['userId'] = $userData['id'];
@@ -30,7 +21,6 @@ class SessionManager {
 
     /**
      * Проверка, авторизован ли пользователь
-     * @return bool
      */
     public static function isUserLoggedIn() {
         return isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] === true;
@@ -38,7 +28,6 @@ class SessionManager {
 
     /**
      * Получение ID текущего пользователя
-     * @return int|null
      */
     public static function getCurrentUserId() {
         return $_SESSION['userId'] ?? null;
@@ -46,7 +35,6 @@ class SessionManager {
 
     /**
      * Получение имени пользователя
-     * @return string
      */
     public static function getUserName() {
         return $_SESSION['userName'] ?? 'Гость';
@@ -54,38 +42,24 @@ class SessionManager {
 
     /**
      * Получение email пользователя
-     * @return string
      */
     public static function getUserEmail() {
         return $_SESSION['userEmail'] ?? '';
     }
 
-    /**
-     * Выход пользователя из системы
-     */
     public static function logout() {
-        // Сохраняем корзину перед выходом
+        // Сохраняем корзину перед выходом (если нужно)
         if (isset($_SESSION['userId'])) {
+            require_once __DIR__ . '/cartIntegration.php';
             saveCartOnLogout($_SESSION['userId']);
         }
 
-        // Очищаем все данные сессии
-        $_SESSION = array();
-
-        // Если нужно уничтожить cookie сессии
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
-            );
-        }
-
-        // Уничтожаем сессию
+        // Очищаем сессию
+        $_SESSION = [];
         session_destroy();
 
-        // Перенаправляем на главную страницу
-        header('Location: ../index.php');
+        // Абсолютный путь для перенаправления
+        echo '<script>window.location.href = "/bob-marley-auto-parts/index.php";</script>';
         exit;
     }
 }

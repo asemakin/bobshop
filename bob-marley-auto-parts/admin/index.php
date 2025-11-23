@@ -1,7 +1,9 @@
-<?php
+нужно чтобы было как тут <?php
+require_once '../includes/init.php';
+
 require_once 'auth.php';
-require_once '../includes/config.php';
-require_once '../includes/functions.php';
+//require_once '../includes/config.php';
+//require_once '../includes/functions.php';
 
 // Простая проверка авторизации (в реальном проекте нужно сделать нормальную авторизацию)
 //$isAdmin = true; // Для теста всегда true
@@ -178,4 +180,3 @@ $totalSales = $pdo->query("SELECT COALESCE(SUM(totalAmount), 0) FROM orders")->f
 <?php include '../includes/footer.php'; ?>
 </body>
 </html>
-

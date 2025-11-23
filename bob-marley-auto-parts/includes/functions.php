@@ -286,7 +286,7 @@ function searchProducts($searchTerm) {
 /**
  * Автоматически подбирает emoji на основе названия товара
  */
-function getProductEmoji($productName, $categoryId = null)
+/**function getProductEmoji($productName, $categoryId = null)
 {
     // Приводим название к нижнему регистру для поиска
     $name = mb_strtolower(trim($productName));
@@ -383,7 +383,7 @@ function getProductEmoji($productName, $categoryId = null)
     // ЕСЛИ ВСЁ ПЛОХО - ИСПОЛЬЗУЕМ ОБЩУЮ ИКОНКУ
     return '🛠️';
 }
-
+*/
 /**
  * Получаем цвет фона для карточки товара
  */
@@ -410,5 +410,5 @@ function getProductImage($product)
     $categoryId = $product['categoryId'] ?? null;
 
     // Возвращаем emoji для использования в div
-    return getProductEmoji($name, $categoryId);
+    //return getProductEmoji($name, $categoryId);
 }

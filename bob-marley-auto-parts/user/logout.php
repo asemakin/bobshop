@@ -1,7 +1,16 @@
 <?php
-// Подключаем менеджер сессий
-require_once '../includes/sessionManager.php';
+// user/logout.php
 
-// Вызываем метод выхода из системы
-SessionManager::logout();
+require_once '../includes/init.php';
+
+// Полная очистка сессии
+session_unset();
+session_destroy();
+session_write_close();
+setcookie(session_name(), '', 0, '/');
+
+// Жесткое перенаправление на главную
+echo '<script>window.location.href = "../index.php";</script>';
+exit;
+
 

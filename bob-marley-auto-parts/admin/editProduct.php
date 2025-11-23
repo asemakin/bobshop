@@ -2,6 +2,7 @@
 require_once 'auth.php';
 require_once '../includes/config.php';
 require_once '../includes/functions.php';
+require_once '../includes/imageFunctions.php'; // ★ ПОДКЛЮЧАЕМ ФУНКЦИИ ДЛЯ ФОТО
 
 // Получаем ID товара для редактирования
 $productId = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -33,12 +34,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!empty($name) && $price > 0) {
         try {
+            // ★ ОБРАБОТКА ИЗОБРАЖЕНИЯ
+            $currentImage = $product['image'];
+
+            // Если загружено новое изображение
+            if (isset($_FILES['productImage']) && $_FILES['productImage']['error'] === UPLOAD_ERR_OK) {
+                $validationErrors = validateImageUpload($_FILES['productImage']);
+                if (empty($validationErrors)) {
+                    // Удаляем старое изображение
+                    deleteProductImages($currentImage);
+                    // Загружаем новое
+                    $uploadedImages = uploadProductImage($_FILES['productImage'], $productId);
+                    $currentImage = $uploadedImages['mainImage'];
+                }
+            }
+
             $stmt = $pdo->prepare("
                 UPDATE products 
-                SET name = ?, description = ?, price = ?, categoryId = ?, stock = ?
+                SET name = ?, description = ?, price = ?, categoryId = ?, stock = ?, image = ?
                 WHERE id = ?
             ");
-            $stmt->execute([$name, $description, $price, $categoryId, $stock, $productId]);
+            $stmt->execute([$name, $description, $price, $categoryId, $stock, $currentImage, $productId]);
             $success = "✅ Товар успешно обновлен!";
 
             // Обновляем данные товара
@@ -60,6 +76,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактирование товара - Bob Marley Auto Parts</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .currentImage {
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .productImagePreview {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 8px;
+            border: 2px solid #2d5a2d;
+        }
+        .imageUploadSection {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
 </head>
 <body>
 <?php include '../includes/header.php'; ?>
@@ -87,8 +121,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div>
                 <h2 style="color: #1a4721; margin-bottom: 1rem;">📝 Данные товара</h2>
 
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data"> <!-- ★ ВАЖНО: добавляем для загрузки файлов -->
                     <div style="display: grid; gap: 1.5rem;">
+
+                        <!-- ★ СЕКЦИЯ ДЛЯ ИЗОБРАЖЕНИЯ -->
+                        <div class="imageUploadSection">
+                            <h3 style="color: #2d5a2d; margin-bottom: 0.5rem;">🖼️ Текущее изображение</h3>
+
+                            <div class="currentImage">
+                                <?php echo getProductImageHtml($product['image'], $product['name'], 'productImagePreview'); ?>
+                            </div>
+
+                            <label style="display: block; margin: 1rem 0 0.5rem 0;">
+                                <strong>Заменить изображение:</strong>
+                            </label>
+                            <input type="file" name="productImage" accept="image/jpeg, image/png, image/webp, image/gif"
+                                   style="margin-bottom: 0.5rem;">
+                            <small style="color: #666;">Разрешены: JPG, PNG, WebP, GIF. Макс. размер: 5MB</small>
+                        </div>
+
                         <div>
                             <label class="formLabel">Название товара *</label>
                             <input type="text" name="name" class="formControl"
@@ -119,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="0">Без категории</option>
                                 <?php foreach ($categories as $category): ?>
                                     <option value="<?php echo $category['id']; ?>"
-                                        <?php echo $product['categoryId'] == $category['id'] ? 'selected' : ''; ?>>
+                                            <?php echo $product['categoryId'] == $category['id'] ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($category['name']); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -139,10 +190,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h2 style="color: #1a4721; margin-bottom: 1rem;">👀 Предпросмотр</h2>
 
                 <div class="productCard">
-                    <div class="productImage" style="background: <?php echo getProductColor($product['categoryId']); ?>;
-                        color: white; display: flex; align-items: center; justify-content: center;
-                        font-size: 3rem; border-radius: 8px; height: 200px; border: 3px solid #f9a602;">
-                        <?php echo getProductImage($product); ?>
+                    <!-- ★ ПОКАЗЫВАЕМ РЕАЛЬНОЕ ФОТО -->
+                    <div class="currentImage">
+                        <?php echo getProductImageHtml($product['image'], $product['name'], 'productImagePreview'); ?>
                     </div>
 
                     <h3 class="productTitle"><?php echo htmlspecialchars($product['name']); ?></h3>
@@ -163,4 +213,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include '../includes/footer.php'; ?>
 </body>
 </html>
-
