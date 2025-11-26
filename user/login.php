@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <!-- Подключаем шапку сайта -->
-<?php include '../includes/header.php'; ?>
+<?php //include '../includes/header.php'; ?>
 
 <div class="container">
     <div class="authForm">

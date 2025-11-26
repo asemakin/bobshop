@@ -3,7 +3,7 @@
  * Менеджер сессий для Bob Marley Auto Parts
  * Управление пользовательскими сессиями и авторизацией
  */
-
+require_once 'cartIntegration.php';
 class SessionManager {
 
     /**

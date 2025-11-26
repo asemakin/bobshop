@@ -109,7 +109,25 @@ $categories = getCategories();
 </head>
 <body>
 <!-- ПОДКЛЮЧАЕМ ШАПКУ САЙТА -->
-<?php include '../includes/header.php'; ?>
+<header class="header">
+    <div class="container">
+        <div class="logo">
+            <h1>🎵 Bob Marley Auto Parts - Админка 🎵</h1>
+            <p>Управление магазином</p>
+        </div>
+        <nav class="navbar">
+            <ul class="navMenu">
+                <li><a href="../index.php">🏠 На сайт</a></li>
+                <li><a href="index.php">📊 Статистика</a></li>
+                <li><a href="products.php">🛍️ Товары</a></li>
+                <li><a href="categories.php">📂 Категории</a></li>
+                <li><a href="orders.php">📦 Заказы</a></li>
+                <li><a href="logout.php" style="color: #e74c3c;">🚪 Выйти (<?php echo $_SESSION['admin_username'] ?? 'Admin'; ?>)</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
 
 <main class="mainContent">
     <div class="container">

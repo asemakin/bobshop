@@ -5,11 +5,11 @@
  */
 
 // Подключаем менеджер сессий для проверки авторизации
-require_once 'sessionManager.php';
+//require_once 'sessionManager.php';
 
 // Подключаем функции если они еще не подключены
-require_once 'functions.php';
-
+//require_once 'functions.php';
+require_once 'init.php';
 // Подключаем пути
 require_once 'paths.php';
 
@@ -27,10 +27,10 @@ $cartItemsCount = count($cart['items']);
 
         <nav class="navbar">
             <ul class="navMenu">
-                <li><a href="<?php echo url('index.php'); ?>">🏠 Главная</a></li>
-                <li><a href="<?php echo url('products.php'); ?>">🛒 Каталог</a></li>
+                <li><a href="<?php echo url('bobshop/index.php'); ?>">🏠 Главная</a></li>
+                <li><a href="<?php echo url('bobshop/products.php'); ?>">🛒 Каталог</a></li>
                 <li>
-                    <a href="<?php echo url('cart.php'); ?>">
+                    <a href="<?php echo url('bobshop/cart.php'); ?>">
                         🛒 Корзина
                         <?php if ($cartItemsCount > 0): ?>
                             <span class="cartBadge">
@@ -39,16 +39,16 @@ $cartItemsCount = count($cart['items']);
                         <?php endif; ?>
                     </a>
                 </li>
-                <li><a href="<?php echo url('checkout.php'); ?>">📦 Оформление</a></li>
+                <li><a href="<?php echo url('bobshop/checkout.php'); ?>">📦 Оформление</a></li>
 
                 <?php if (SessionManager::isUserLoggedIn()): ?>
                     <!-- Показываем для авторизованных пользователей -->
-                    <li><a href="<?php echo url('user/profile.php'); ?>">👤 <?php echo htmlspecialchars(SessionManager::getUserName()); ?></a></li>
-                    <li><a href="<?php echo url('user/logout.php'); ?>">🚪 Выйти</a></li>
+                    <li><a href="<?php echo url('bobshop/user/profile.php'); ?>">👤 <?php echo htmlspecialchars(SessionManager::getUserName()); ?></a></li>
+                    <li><a href="<?php echo url('bobshop/user/logout.php'); ?>">🚪 Выйти</a></li>
                 <?php else: ?>
                     <!-- Показываем для неавторизованных пользователей -->
-                    <li><a href="<?php echo url('user/login.php'); ?>">🔑 Войти</a></li>
-                    <li><a href="<?php echo url('user/register.php'); ?>">📝 Регистрация</a></li>
+                    <li><a href="<?php echo url('bobshop/user/login.php'); ?>">🔑 Войти</a></li>
+                    <li><a href="<?php echo url('bobshop/user/register.php'); ?>">📝 Регистрация</a></li>
                 <?php endif; ?>
             </ul>
         </nav>

@@ -1,4 +1,4 @@
-нужно чтобы было как тут <?php
+<?php
 require_once '../includes/init.php';
 
 require_once 'auth.php';
@@ -77,7 +77,7 @@ $totalSales = $pdo->query("SELECT COALESCE(SUM(totalAmount), 0) FROM orders")->f
         </div>
         <nav class="navbar">
             <ul class="navMenu">
-                <li><a href="../index.php">🏠 На сайт</a></li>
+                <li><a href="../index.php">🏠???</a></li>
                 <li><a href="index.php">📊 Статистика</a></li>
                 <li><a href="products.php">🛍️ Товары</a></li>
                 <li><a href="categories.php">📂 Категории</a></li>

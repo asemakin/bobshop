@@ -36,7 +36,7 @@
         <!-- Копирайт и финальное сообщение -->
         <div style="text-align: center; padding-top: 2rem; border-top: 1px solid #2d5a2d;">
             <p>&copy; <?php echo date('Y'); ?> Bob Marley Auto Parts. One Love, One Heart, Quality Auto Parts! 🎵</p>
-            <p>Сделано с ❤️ и регги вибрациями | <a href="admin/" style="color: #f9a602;">Админ-панель</a></p>
+            <p>Сделано с ❤️ и регги вибрациями |</a></p>
         </div>
     </div>
 </footer>
