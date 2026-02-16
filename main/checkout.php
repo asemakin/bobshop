@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div style="background: #27ae60; color: white; padding: 2rem; border-radius: 10px; text-align: center; margin-bottom: 2rem;">
                 <h3>🎉 <?php echo $success; ?></h3>
                 <p>Спасибо за ваш заказ! One Love! ❤️</p>
-                <a href="products.php" class="btn btnPrimary">Вернуться к покупкам</a>
+                <a href="main/products.php" class="btn btnPrimary">Вернуться к покупкам</a>
 
                 <?php if (!SessionManager::isUserLoggedIn()): ?>
                     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.3);">

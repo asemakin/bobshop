@@ -110,7 +110,7 @@ $cart = getCart();
                     </div>
                 <?php endif; ?>
 
-                <a href="products.php" class="btn btnPrimary">Перейти в каталог</a>
+                <a href="main/products.php" class="btn btnPrimary">Перейти в каталог</a>
             </div>
         <?php else: ?>
             <!-- Если в корзине есть товары - выводим их -->
@@ -238,7 +238,7 @@ $cart = getCart();
                     </form>
 
                     <!-- Ссылка для продолжения покупок -->
-                    <a href="products.php" class="btn btnPrimary">Продолжить покупки</a>
+                    <a href="main/products.php" class="btn btnPrimary">Продолжить покупки</a>
 
                     <!-- Ссылка для перехода к оформлению -->
                     <a href="checkout.php" class="btn btnSuccess" style="font-size: 1.1rem; padding: 1rem 2rem;">
