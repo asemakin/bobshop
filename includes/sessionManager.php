@@ -59,7 +59,7 @@ class SessionManager {
         session_destroy();
 
         // Абсолютный путь для перенаправления
-        echo '<script>window.location.href = "/bob-marley-auto-parts/index.php";</script>';
+        echo '<script>window.location.href = "../main/index.php";</script>';
         exit;
     }
 }

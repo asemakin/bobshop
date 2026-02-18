@@ -10,7 +10,7 @@ session_write_close();
 setcookie(session_name(), '', 0, '/');
 
 // Жесткое перенаправление на главную
-echo '<script>window.location.href = "../index.php";</script>';
+echo '<script>window.location.href = "../main/index.php";</script>';
 exit;
 
 

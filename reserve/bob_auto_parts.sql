@@ -160,4 +160,7 @@ CREATE TABLE `orderReferralInfo` (
                                        CONSTRAINT `fk_ori_order` FOREIGN KEY (`id`) REFERENCES `order` (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+USE bobMarleyAutoParts;
+
+
 

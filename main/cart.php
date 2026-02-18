@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once 'includes/init.php';
-require_once 'includes/imageFunctions.php'; // ← ДОБАВЬ ЭТУ СТРОКУ
+require_once '../includes/init.php';
+require_once '../includes/imageFunctions.php'; // ← ДОБАВЬ ЭТУ СТРОКУ
 
 //require_once 'includes/config.php';
 //require_once 'includes/functions.php';
@@ -67,11 +67,11 @@ $cart = getCart();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Корзина - Bob Marley Auto Parts</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 <!-- Подключаем шапку сайта -->
-<?php include 'includes/header.php'; ?>
+<?php include '../includes/header.php'; ?>
 
 <main class="mainContent">
     <div class="container">
@@ -101,16 +101,16 @@ $cart = getCart();
                             <li>Отслеживать историю заказов</li>
                             <li>Получать персональные скидки</li>
                         </ul>
-                        <a href="user/register.php" class="btn btnPrimary" style="margin: 0.5rem;">
+                        <a href="../user/register.php" class="btn btnPrimary" style="margin: 0.5rem;">
                             📝 Бесплатная регистрация
                         </a>
-                        <a href="user/login.php" class="btn" style="background: transparent; border: 2px solid #1a4721; color: #1a4721; margin: 0.5rem;">
+                        <a href="../user/login.php" class="btn" style="background: transparent; border: 2px solid #1a4721; color: #1a4721; margin: 0.5rem;">
                             🔑 Войти в аккаунт
                         </a>
                     </div>
                 <?php endif; ?>
 
-                <a href="main/products.php" class="btn btnPrimary">Перейти в каталог</a>
+                <a href="products.php" class="btn btnPrimary">Перейти в каталог</a>
             </div>
         <?php else: ?>
             <!-- Если в корзине есть товары - выводим их -->
@@ -238,7 +238,7 @@ $cart = getCart();
                     </form>
 
                     <!-- Ссылка для продолжения покупок -->
-                    <a href="main/products.php" class="btn btnPrimary">Продолжить покупки</a>
+                    <a href="products.php" class="btn btnPrimary">Продолжить покупки</a>
 
                     <!-- Ссылка для перехода к оформлению -->
                     <a href="checkout.php" class="btn btnSuccess" style="font-size: 1.1rem; padding: 1rem 2rem;">
@@ -252,8 +252,8 @@ $cart = getCart();
                         <p style="margin-bottom: 1rem;"><strong>Не теряйте свою корзину!</strong></p>
                         <p>Зарегистрируйтесь чтобы сохранить товары и получить доступ к истории заказов</p>
                         <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
-                            <a href="user/register.php" class="btn btnPrimary">📝 Быстрая регистрация</a>
-                            <a href="user/login.php" class="btn" style="background: transparent; border: 2px solid #1a4721; color: #1a4721;">
+                            <a href="../user/register.php" class="btn btnPrimary">📝 Быстрая регистрация</a>
+                            <a href="../user/login.php" class="btn" style="background: transparent; border: 2px solid #1a4721; color: #1a4721;">
                                 🔑 Уже есть аккаунт
                             </a>
                         </div>
@@ -265,6 +265,6 @@ $cart = getCart();
 </main>
 
 <!-- Подключаем подвал сайта -->
-<?php include 'includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>
 </body>
 </html>

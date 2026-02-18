@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <nav class="navbar">
             <ul class="navMenu">
-                <li><a href="../index.php">🏠???</a></li>
+                <li><a href="../main/index.php">🏠???</a></li>
                 <li><a href="index.php">📊 Статистика</a></li>
                 <li><a href="products.php">🛍️ Товары</a></li>
                 <li><a href="categories.php">📂 Категории</a></li>

@@ -27,11 +27,10 @@ $cartItemsCount = count($cart['items']);
 
         <nav class="navbar">
             <ul class="navMenu">
-                <li><a href="<?php echo url('bobshop/index.php'); ?>">🏠 Главная</a></li>
-                <li><a href="<?php echo url('bobshop/products.php'); ?>">🛒 Каталог</a></li>
+                <li><a href="<?php echo url('/index.php'); ?>">🏠 Главная</a></li>
+                <li><a href="<?php echo url('/products.php'); ?>">🛒 Каталог</a></li>
                 <li>
-                    <a href="<?php echo url('bobshop/cart.php'); ?>">
-                        🛒 Корзина
+                    <a href="<?php echo url('/cart.php'); ?>"> 🛒 Корзина
                         <?php if ($cartItemsCount > 0): ?>
                             <span class="cartBadge">
                                 (<?php echo $cartItemsCount; ?>)
@@ -39,7 +38,7 @@ $cartItemsCount = count($cart['items']);
                         <?php endif; ?>
                     </a>
                 </li>
-                <li><a href="<?php echo url('bobshop/checkout.php'); ?>">📦 Оформление</a></li>
+                <li><a href="<?php echo url('/checkout.php'); ?>">📦 Оформление</a></li>
 
                 <?php if (SessionManager::isUserLoggedIn()): ?>
                     <!-- Показываем для авторизованных пользователей -->

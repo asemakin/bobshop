@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['addToCart'])) {
 
                 <!-- ССЫЛКА НАЗАД В КАТАЛОГ -->
                 <div style="margin-top: 2rem;">
-                    <a href="products.php" class="btn btnPrimary">← Назад к каталогу</a>
+                    <a href="main/products.php" class="btn btnPrimary">← Назад к каталогу</a>
                 </div>
             </div>
         </div>

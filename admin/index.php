@@ -77,7 +77,7 @@ $totalSales = $pdo->query("SELECT COALESCE(SUM(totalAmount), 0) FROM orders")->f
         </div>
         <nav class="navbar">
             <ul class="navMenu">
-                <li><a href="../index.php">🏠???</a></li>
+                <li><a href="../main/index.php">🏠???</a></li>
                 <li><a href="index.php">📊 Статистика</a></li>
                 <li><a href="products.php">🛍️ Товары</a></li>
                 <li><a href="categories.php">📂 Категории</a></li>
@@ -124,7 +124,7 @@ $totalSales = $pdo->query("SELECT COALESCE(SUM(totalAmount), 0) FROM orders")->f
                 <h3>📦 Управление заказами</h3>
                 <p>Просмотр и обработка заказов</p>
             </a>
-            <a href="../products.php" class="menu-card">
+            <a href="../main/products.php" class="menu-card">
                 <h3>👀 Посмотреть магазин</h3>
                 <p>Перейти на сайт как покупатель</p>
             </a>
@@ -137,7 +137,7 @@ $totalSales = $pdo->query("SELECT COALESCE(SUM(totalAmount), 0) FROM orders")->f
             $recentOrders = $pdo->query("
                     SELECT * FROM orders 
                     ORDER BY createdAt DESC 
-                    LIMIT 5
+                    LIMIT 3
                 ")->fetchAll();
             ?>
 

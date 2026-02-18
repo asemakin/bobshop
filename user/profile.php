@@ -210,7 +210,7 @@ $userOrders = getUserOrders($currentUser['id']);
 
                 <?php if (empty($userOrders)): ?>
                     <p>У вас еще нет заказов</p>
-                    <a href="../products.php" class="btn btnPrimary">🛒 Сделать первый заказ</a>
+                    <a href="../main/products.php" class="btn btnPrimary">🛒 Сделать первый заказ</a>
                 <?php else: ?>
                     <div class="ordersList">
                         <?php foreach ($userOrders as $order): ?>

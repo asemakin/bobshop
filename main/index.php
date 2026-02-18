@@ -4,8 +4,8 @@
 // ЗАПУСКАЕМ СЕССИЮ В НАЧАЛЕ ФАЙЛА
 session_start();
 
-require_once 'includes/init.php';
-require_once 'includes/imageFunctions.php'; // ← ДОБАВЬ ЭТУ СТРОКУ
+require_once '../includes/init.php';
+require_once '../includes/imageFunctions.php'; // ← ДОБАВЬ ЭТУ СТРОКУ
 //require_once 'includes/config.php';
 //require_once 'includes/functions.php';
 
@@ -20,10 +20,10 @@ $categories = getCategories();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bob Marley Auto Parts - Качественные автозапчасти</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-<?php include ('includes/header.php'); ?>
+<?php include('../includes/header.php'); ?>
 
 <section class="hero">
     <div class="container">
@@ -46,7 +46,7 @@ $categories = getCategories();
                 <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
                     <h3 style="color: #666;">Товаров пока нет</h3>
                     <p>Добавьте товары через админ-панель или проверьте подключение к БД</p>
-                    <a href="admin/" class="btn btnPrimary">Перейти в админку</a>
+                    <a href="../admin" class="btn btnPrimary">Перейти в админку</a>
                 </div>
             <?php else: ?>
                 <div class="productsGrid">
@@ -78,7 +78,7 @@ $categories = getCategories();
                             <div class="productPrice"><?php echo formatPrice($product['price']); ?></div>
 
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <a href="productDetail.php?id=<?php echo $product['id']; ?>" class="btn btnPrimary">
+                                <a href="../productDetail.php?id=<?php echo $product['id']; ?>" class="btn btnPrimary">
                                     Подробнее
                                 </a>
                                 <form method="POST" action="cart.php" style="display: inline;">

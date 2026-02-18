@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Оформление заказа - Bob Marley Auto Parts</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 <!-- Подключаем шапку сайта -->
@@ -99,15 +99,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div style="background: #27ae60; color: white; padding: 2rem; border-radius: 10px; text-align: center; margin-bottom: 2rem;">
                 <h3>🎉 <?php echo $success; ?></h3>
                 <p>Спасибо за ваш заказ! One Love! ❤️</p>
-                <a href="main/products.php" class="btn btnPrimary">Вернуться к покупкам</a>
+                <a href="products.php" class="btn btnPrimary">Вернуться к покупкам</a>
 
                 <?php if (!SessionManager::isUserLoggedIn()): ?>
                     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.3);">
                         <p>Хотите отслеживать статус заказа?</p>
-                        <a href="user/register.php" class="btn" style="background: white; color: #27ae60; margin: 0.5rem;">
+                        <a href="../user/register.php" class="btn" style="background: white; color: #27ae60; margin: 0.5rem;">
                             📝 Зарегистрироваться
                         </a>
-                        <a href="user/login.php" class="btn" style="background: transparent; border: 2px solid white; color: white; margin: 0.5rem;">
+                        <a href="../user/login.php" class="btn" style="background: transparent; border: 2px solid white; color: white; margin: 0.5rem;">
                             🔑 Войти
                         </a>
                     </div>
@@ -189,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php if (!SessionManager::isUserLoggedIn()): ?>
                             <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
                                 <p style="color: #666; margin-bottom: 0.5rem;">Есть аккаунт?</p>
-                                <a href="user/login.php" style="color: #f9a602; text-decoration: none; font-weight: bold;">
+                                <a href="../user/login.php" style="color: #f9a602; text-decoration: none; font-weight: bold;">
                                     🔑 Войдите для быстрого оформления
                                 </a>
                             </div>
@@ -234,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <li>Быстрое оформление</li>
                                 <li>Сохранение корзины</li>
                             </ul>
-                            <a href="user/register.php" style="color: #27ae60; font-weight: bold;">
+                            <a href="../user/register.php" style="color: #27ae60; font-weight: bold;">
                                 📝 Зарегистрироваться бесплатно
                             </a>
                         </div>

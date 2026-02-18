@@ -1,9 +1,9 @@
 <?php
 session_start();
 
-require_once 'includes/init.php';
-require_once 'includes/imageFunctions.php';
-require_once 'includes/cartManager.php';
+require_once '../includes/init.php';
+require_once '../includes/imageFunctions.php';
+require_once '../includes/cartManager.php';
 
 $categoryId = isset($_GET['categoryId']) ? intval($_GET['categoryId']) : null;
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -132,7 +132,7 @@ $cartProductIds = CartManager::getCartProductIds();
     </style>
 </head>
 <body>
-<?php include 'includes/header.php'; ?>
+<?php include '../includes/header.php'; ?>
 
 <main class="mainContent">
     <div class="container">
@@ -271,7 +271,7 @@ $cartProductIds = CartManager::getCartProductIds();
     </div>
 </main>
 
-<?php include 'includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>
 
 <script>
     function updateCart(productId, change) {
