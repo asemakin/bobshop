@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Успешная авторизация, начинаем сессию
             SessionManager::startUserSession($result['user']);
             // Перенаправляем на главную страницу
-            header('Location: ../index.php');
+            header('Location: /main/index.php');
             exit;
         } else {
             $error = $result['message'];

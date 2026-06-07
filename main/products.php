@@ -247,7 +247,7 @@ $cartProductIds = CartManager::getCartProductIds();
                                     </button>
                                 </div>
                             <?php else: ?>
-                                <form method="POST" action="includes/addToCartHandler.php" class="fullWidth">
+                                <form method="POST" action="../includes/addToCartHandler.php" class="fullWidth">
                                     <input type="hidden" name="productId" value="<?php echo $product['id']; ?>">
                                     <input type="hidden" name="quantity" value="1">
                                     <button type="submit"

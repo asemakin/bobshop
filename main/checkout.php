@@ -1,9 +1,9 @@
 <?php
 session_start();
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
-require_once 'includes/sessionManager.php';
-require_once 'includes/cartIntegration.php';
+require_once '../includes/config.php';
+require_once '../includes/functions.php';
+require_once '../includes/sessionManager.php';
+require_once '../includes/cartIntegration.php';
 
 // Получаем корзину пользователя
 $cart = getCart();
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <!-- Подключаем шапку сайта -->
-<?php include 'includes/header.php'; ?>
+<?php include '../includes/header.php'; ?>
 
 <main class="mainContent">
     <div class="container">
@@ -246,6 +246,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </main>
 
 <!-- Подключаем подвал сайта -->
-<?php include 'includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>
 </body>
 </html>
