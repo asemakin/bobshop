@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<!--
+    ФАЙЛ: index.html
+    ЗА ЧТО ОТВЕЧАЕТ: главная страница сайта "Бюджеты регионов России"
+
+    ОСОБЕННОСТЬ: данные автоматически парсятся с сайта Минфина РФ
+    Никаких ручных обновлений — всё само!
+-->
+
+<html lang="ru">
+<head>
+    <!-- Кодировка UTF-8 — нужна для русских букв -->
+    <meta charset="UTF-8">
+
+    <!-- Настройка для мобильных устройств (телефонов) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Заголовок на вкладке браузера -->
+    <title>Бюджеты регионов России</title>
+
+    <!-- Подключаем шрифт Google Fonts для красивого отображения -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- ================================================================ -->
+    <!-- ВСЕ СТИЛИ (CSS) — такие же как на счётчике                      -->
+    <!-- ================================================================ -->
+    <style>
+        /*
+            * (звёздочка) — выбирает ВСЕ элементы на странице.
+            margin: 0 — убираем отступы у всех элементов.
+            padding: 0 — убираем внутренние отступы.
+            box-sizing: border-box — ширина включает padding и border.
+            Это делает вёрстку более предсказуемой.
+        */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* Стили для всей страницы */
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+
+            /* ФОН С ФЛАГОМ РОССИИ (два слоя) */
+            background:
+                /* Слой 1: тёмная накладка (чтобы текст читался) */
+                    radial-gradient(circle at 20% 50%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.8) 100%),
+                        /* Слой 2: полосы флага (белый, синий, красный) */
+                    linear-gradient(180deg,
+                    #ffffff 0%, #ffffff 33%,
+                    #0033a0 33%, #0033a0 66%,
+                    #da291c 66%, #da291c 100%
+                    );
+            background-attachment: fixed;    /* Фон не двигается при прокрутке */
+            background-size: cover;          /* Фон на весь экран */
+            min-height: 100vh;               /* Минимальная высота = высоте экрана */
+            padding: 40px 24px;              /* Внутренние отступы */
+
+            color: #ffffff;                  /* ВЕСЬ ТЕКСТ БЕЛЫЙ */
+        }
+
+        /* Контейнер — ограничивает ширину и центрирует содержимое */
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* ================================================================ */
+        /* ШАПКА САЙТА                                                     */
+        /* ================================================================ */
+        .header {
+            display: flex;                 /* Flexbox — элементы в строку */
+            justify-content: space-between; /* Логотип слева, счётчик справа */
+            align-items: center;           /* Вертикальное выравнивание */
+            flex-wrap: wrap;               /* Перенос на телефонах */
+            gap: 20px;
+            margin-bottom: 40px;
+            padding: 20px 32px;
+            background: rgba(10, 10, 20, 0.7);  /* Полупрозрачный фон */
+            backdrop-filter: blur(16px);        /* Размытие (эффект стекла) */
+            border-radius: 32px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .header__logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header__logo-icon {
+            font-size: 42px;
+        }
+
+        .header__logo-text {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #ffe6b3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Счётчик посетителей */
+        .visitor-counter {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0,0,0,0.5);
+            padding: 12px 24px;
+            border-radius: 60px;
+        }
+
+        .visitor-counter__value {
+            color: #ffd966;
+            font-size: 28px;
+            font-weight: 800;
+            margin-left: 6px;
+        }
+
+        /* ================================================================ */
+        /* ОСНОВНОЙ ВИДЖЕТ                                                 */
+        /* ================================================================ */
+        .budget-widget {
+            background: rgba(10, 10, 20, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 32px;
+            padding: 40px 32px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        /* Плашка с информацией о данных */
+        .budget-widget__badge {
+            display: inline-block;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 20px;
+            border-radius: 60px;
+            font-size: 13px;
+            color: #ffd966;
+            margin-bottom: 24px;
+        }
+
+        .budget-widget__title {
+            font-size: 38px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .budget-widget__subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+
+        /* ================================================================ */
+        /* ВЫБОР ГОДА (кнопки)                                              */
+        /* ================================================================ */
+        .year-selector {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .year-btn {
+            padding: 10px 24px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 40px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .year-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .year-btn.active {
+            background: #ffd966;
+            color: #1a1a3e;
+            border-color: #ffd966;
+        }
+
+        /* ================================================================ */
+        /* БЛОК С ЦИФРАМИ (доходы и расходы)                                */
+        /* ================================================================ */
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin: 20px 0 30px 0;
+        }
+
+        .number-card {
+            background: rgba(0,0,0,0.4);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .number-card__icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .number-card__label {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 6px;
+        }
+
+        .number-card__value {
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffd966;
+        }
+
+        /* ================================================================ */
+        /* ДЕФИЦИТ / ПРОФИЦИТ                                               */
+        /* ================================================================ */
+        .deficit-card {
+            background: rgba(255, 50, 50, 0.2);
+            border: 1px solid rgba(255, 50, 50, 0.3);
+            border-radius: 20px;
+            padding: 16px 24px;
+            margin: 10px 0 20px 0;
+            text-align: center;
+        }
+
+        .deficit-card .number-card__value {
+            color: #ff6666;
+        }
+
+        /* ================================================================ */
+        /* ТАБЛИЦА РЕГИОНОВ (все 85)                                       */
+        /* ================================================================ */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 24px;
+            background: rgba(0,0,0,0.3);
+            margin-top: 20px;
+        }
+
+        .regions-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .regions-table th, .regions-table td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .regions-table th {
+            background: rgba(0,0,0,0.5);
+            color: #ffd966;
+            font-weight: 700;
+        }
+
+        .regions-table tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .budget-readable {
+            color: #ffd966;
+            font-weight: 700;
+        }
+
+        /* ================================================================ */
+        /* ИСТОЧНИК ДАННЫХ                                                  */
+        /* ================================================================ */
+        .source-block {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 16px 20px;
+            margin: 20px 0 0 0;
+            text-align: left;
+            border-left: 4px solid #ffd966;
+            font-size: 13px;
+        }
+
+        .source-title {
+            color: #ffd966;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        /* ================================================================ */
+        /* СРАВНЕНИЕ ПО ГОДАМ                                               */
+        /* ================================================================ */
+        .compare-block {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .compare-block h3 {
+            margin-bottom: 15px;
+            color: #ffd966;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .compare-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .compare-item__year {
+            font-weight: 700;
+            font-size: 18px;
+            color: #ffd966;
+        }
+
+        .compare-item__value {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        /* ================================================================ */
+        /* ПОДВАЛ                                                          */
+        /* ================================================================ */
+        .footer {
+            text-align: center;
+            padding: 28px 24px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 32px;
+            margin-top: 30px;
+        }
+
+        .footer p {
+            font-size: 12px;
+            opacity: 0.55;
+            margin: 6px 0;
+        }
+
+        /* ================================================================ */
+        /* АНИМАЦИЯ                                                        */
+        /* ================================================================ */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .budget-widget {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* ================================================================ */
+        /* АДАПТАЦИЯ ДЛЯ ТЕЛЕФОНОВ                                          */
+        /* ================================================================ */
+        @media (max-width: 768px) {
+            body { padding: 20px 16px; }
+            .header { flex-direction: column; text-align: center; }
+            .budget-widget__title { font-size: 26px; }
+            .year-btn { padding: 8px 16px; font-size: 14px; }
+            .numbers-grid { grid-template-columns: 1fr 1fr; }
+            .number-card__value { font-size: 20px; }
+            .compare-grid { grid-template-columns: 1fr 1fr 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .numbers-grid { grid-template-columns: 1fr; }
+            .compare-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- ================================================================ -->
+    <!-- ШАПКА                                                           -->
+    <!-- ================================================================ -->
+    <header class="header">
+        <div class="header__logo">
+            <span class="header__logo-icon">📊</span>
+            <h1 class="header__logo-text">Бюджеты России</h1>
+        </div>
+        <div class="visitor-counter">
+            <span>👁️</span>
+            <span>Посетителей:</span>
+            <strong class="visitor-counter__value" id="visitorCount">--</strong>
+        </div>
+    </header>
+
+    <!-- ================================================================ -->
+    <!-- ОСНОВНОЙ ВИДЖЕТ                                                -->
+    <!-- ================================================================ -->
+    <div class="budget-widget">
+        <!-- Информация о данных (автоматически обновляется) -->
+        <div class="budget-widget__badge" id="dataBadge">📊 Данные загружаются...</div>
+
+        <h2 class="budget-widget__title">📊 БЮДЖЕТЫ РЕГИОНОВ РОССИИ</h2>
+        <p class="budget-widget__subtitle">Данные с официального портала Минфина РФ</p>
+
+        <!-- ВЫБОР ГОДА (кнопки генерируются автоматически) -->
+        <div class="year-selector" id="yearSelector">
+            <!-- Кнопки создаются через JavaScript -->
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- СТАТИСТИКА ПО ВЫБРАННОМУ ГОДУ                                -->
+        <!-- ============================================================ -->
+
+        <!-- Общие показатели -->
+        <div class="numbers-grid" id="mainNumbers">
+            <div class="number-card">
+                <div class="number-card__icon">🏛️</div>
+                <div class="number-card__label">Всего регионов</div>
+                <div class="number-card__value" id="regionsCount">--</div>
+            </div>
+            <div class="number-card">
+                <div class="number-card__icon">💰</div>
+                <div class="number-card__label">Средний доход</div>
+                <div class="number-card__value" id="avgIncome">--</div>
+            </div>
+            <div class="number-card">
+                <div class="number-card__icon">💳</div>
+                <div class="number-card__label">Средний расход</div>
+                <div class="number-card__value" id="avgExpense">--</div>
+            </div>
+            <div class="number-card">
+                <div class="number-card__icon">📊</div>
+                <div class="number-card__label">Суммарный дефицит</div>
+                <div class="number-card__value" id="totalDeficit">--</div>
+            </div>
+        </div>
+
+        <!-- ДАТА ОБНОВЛЕНИЯ -->
+        <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">
+            🕐 Данные актуальны на: <span id="updateDate">--</span>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ТАБЛИЦА ВСЕХ РЕГИОНОВ                                       -->
+        <!-- ============================================================ -->
+        <h3 style="text-align: left; margin-top: 30px; margin-bottom: 15px; color: #ffd966;">📋 Все регионы</h3>
+
+        <!-- Поиск -->
+        <div class="table-controls" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+            <input type="text" id="searchInput" placeholder="🔍 Поиск региона..." style="
+                    flex: 2;
+                    padding: 12px 20px;
+                    background: rgba(0,0,0,0.5);
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 40px;
+                    color: white;
+                    font-size: 16px;
+                ">
+            <button id="sortByBudgetBtn" style="
+                    padding: 12px 25px;
+                    background: rgba(0,0,0,0.5);
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 40px;
+                    color: white;
+                    font-size: 14px;
+                    cursor: pointer;
+                ">📊 По бюджету</button>
+            <button id="sortByNameBtn" style="
+                    padding: 12px 25px;
+                    background: rgba(0,0,0,0.5);
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 40px;
+                    color: white;
+                    font-size: 14px;
+                    cursor: pointer;
+                ">🔤 По названию</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="regions-table">
+                <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Регион</th>
+                    <th>Доходы (млрд ₽)</th>
+                    <th>Расходы (млрд ₽)</th>
+                    <th>Дефицит (млрд ₽)</th>
+                </tr>
+                </thead>
+                <tbody id="tableBody">
+                <tr><td colspan="5" style="text-align:center;">⏳ Загрузка данных с Минфина...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ИСТОЧНИК ДАННЫХ                                              -->
+        <!-- ============================================================ -->
+        <div class="source-block">
+            <div class="source-title">📊 ИСТОЧНИК ДАННЫХ</div>
+            <div>
+                Официальные данные Минфина России —
+                <a href="https://minfin.gov.ru/ru/opendata/7710168360-subbud_year"
+                   target="_blank"
+                   style="color: #ffd966; text-decoration: none; border-bottom: 1px dotted;">
+                    opendata.minfin.gov.ru
+                </a>
+                <br>
+                Данные парсятся автоматически, обновляются ежедневно
+            </div>
+        </div>
+
+        <!-- КНОПКА ОБНОВЛЕНИЯ -->
+        <button onclick="location.reload();" style="
+                background: rgba(255,215,0,0.2);
+                border: 1px solid rgba(255,215,0,0.3);
+                color: white;
+                padding: 12px 30px;
+                border-radius: 40px;
+                cursor: pointer;
+                font-size: 14px;
+                margin-top: 20px;
+                transition: all 0.3s;
+            " onmouseover="this.style.background='rgba(255,215,0,0.3)'" onmouseout="this.style.background='rgba(255,215,0,0.2)'">
+            🔄 Обновить данные
+        </button>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- ПОДВАЛ                                                          -->
+    <!-- ================================================================ -->
+    <footer class="footer">
+        <p>© 2026 Бюджеты России — Автоматический парсинг данных Минфина</p>
+        <p>Все 85 регионов, данные обновляются ежедневно</p>
+        <p>Счётчик посещений работает на файлах — без БД</p>
+    </footer>
+
+</div>
+
+<!-- ================================================================ -->
+<!-- JAVASCRIPT                                                       -->
+<!-- ================================================================ -->
+<script>
+    /**
+     * ================================================================
+     * 1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+     * ================================================================
+     */
+    let allRegions = [];        // Все регионы (загружаются из api.php)
+    let currentYear = 2025;     // Текущий выбранный год
+    let currentSort = 'budget'; // 'budget' или 'name'
+    let sortDirection = 'desc'; // 'desc' или 'asc'
+    let allYears = [];          // Все доступные годы
+
+    /**
+     * ================================================================
+     * 2. ЗАГРУЗКА ДАННЫХ С СЕРВЕРА
+     * ================================================================
+     */
+    async function loadData() {
+        try {
+            // Показываем, что данные загружаются
+            document.getElementById('dataBadge').textContent = '📊 Загрузка данных с Минфина...';
+
+            // Отправляем запрос к api.php
+            const response = await fetch('api.php');
+
+            // Проверяем, успешно ли прошёл запрос
+            if (!response.ok) {
+                throw new Error('Ошибка HTTP: ' + response.status);
+            }
+
+            // Преобразуем ответ в JavaScript-объект
+            const data = await response.json();
+
+            // ===== СОХРАНЯЕМ ДАННЫЕ =====
+            allRegions = data.regions || [];
+            allYears = data.years || [];
+
+            // ===== ОБНОВЛЯЕМ СЧЁТЧИК ПОСЕТИТЕЛЕЙ =====
+            if (data.visitors) {
+                document.getElementById('visitorCount').textContent = data.visitors;
+            }
+
+            // ===== ОБНОВЛЯЕМ ДАТУ =====
+            if (data.update_date) {
+                document.getElementById('updateDate').textContent = data.update_date;
+            }
+
+            // ===== ОБНОВЛЯЕМ БЕЙДЖ =====
+            document.getElementById('dataBadge').textContent = '📊 Данные Минфина РФ (' + allYears.length + ' годов)';
+
+            // ===== СОЗДАЁМ КНОПКИ ГОДОВ =====
+            createYearButtons();
+
+            // ===== ПОКАЗЫВАЕМ ДАННЫЕ ЗА ПЕРВЫЙ ГОД =====
+            if (allYears.length > 0) {
+                currentYear = allYears[allYears.length - 1]; // Самый свежий год
+                renderYear(currentYear);
+            }
+
+        } catch (error) {
+            // Если ошибка — показываем на странице
+            console.error('Ошибка загрузки:', error);
+            document.getElementById('dataBadge').textContent = '❌ Ошибка загрузки данных';
+            document.getElementById('tableBody').innerHTML =
+                '<tr><td colspan="5" style="text-align:center; color:#ff6666;">❌ Ошибка: ' + error.message + '</td></tr>';
+        }
+    }
+
+    /**
+     * ================================================================
+     * 3. СОЗДАНИЕ КНОПОК ВЫБОРА ГОДА
+     * ================================================================
+     */
+    function createYearButtons() {
+        const container = document.getElementById('yearSelector');
+        container.innerHTML = '';
+
+        // Сортируем года по возрастанию
+        const sortedYears = [...allYears].sort();
+
+        // Для каждого года создаём кнопку
+        sortedYears.forEach(year => {
+            const btn = document.createElement('button');
+            btn.className = 'year-btn';
+            btn.textContent = year + ' год';
+            btn.dataset.year = year;
+
+            // Если это самый свежий год — делаем активным
+            if (year === currentYear) {
+                btn.classList.add('active');
+            }
+
+            // Обработчик клика
+            btn.addEventListener('click', function() {
+                // Убираем активный класс у всех кнопок
+                document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+                // Добавляем активный класс текущей кнопке
+                this.classList.add('active');
+                // Показываем данные за выбранный год
+                currentYear = parseInt(this.dataset.year);
+                renderYear(currentYear);
+            });
+
+            container.appendChild(btn);
+        });
+    }
+
+    /**
+     * ================================================================
+     * 4. ОТОБРАЖЕНИЕ ДАННЫХ ЗА КОНКРЕТНЫЙ ГОД
+     * ================================================================
+     */
+    function renderYear(year) {
+        // Фильтруем регионы по году
+        const yearData = allRegions.filter(r => r.year == year);
+
+        if (yearData.length === 0) {
+            document.getElementById('tableBody').innerHTML =
+                '<tr><td colspan="5" style="text-align:center;">Нет данных за ' + year + ' год</td></tr>';
+            return;
+        }
+
+        // ===== СЧИТАЕМ СТАТИСТИКУ =====
+        const totalRegions = yearData.length;
+
+        // Суммируем доходы и расходы
+        let totalIncome = 0;
+        let totalExpense = 0;
+        let totalDeficit = 0;
+
+        yearData.forEach(r => {
+            totalIncome += r.income;
+            totalExpense += r.expense;
+            totalDeficit += (r.expense - r.income);
+        });
+
+        // Средние значения
+        const avgIncome = totalIncome / totalRegions;
+        const avgExpense = totalExpense / totalRegions;
+
+        // ===== ОБНОВЛЯЕМ КАРТОЧКИ =====
+        document.getElementById('regionsCount').textContent = totalRegions;
+        document.getElementById('avgIncome').textContent = avgIncome.toFixed(1) + ' млрд ₽';
+        document.getElementById('avgExpense').textContent = avgExpense.toFixed(1) + ' млрд ₽';
+        document.getElementById('totalDeficit').textContent = totalDeficit.toFixed(1) + ' млрд ₽';
+
+        // ===== ОБНОВЛЯЕМ ТАБЛИЦУ =====
+        renderTable(yearData);
+    }
+
+    /**
+     * ================================================================
+     * 5. ОТОБРАЖЕНИЕ ТАБЛИЦЫ (с поиском и сортировкой)
+     * ================================================================
+     */
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+
+        // Получаем текст поиска
+        const searchInput = document.getElementById('searchInput');
+        const searchText = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+        // ===== ШАГ 1: ФИЛЬТРАЦИЯ =====
+        let filtered = data;
+        if (searchText !== '') {
+            filtered = data.filter(r => {
+                return r.name.toLowerCase().includes(searchText);
+            });
+        }
+
+        // ===== ШАГ 2: СОРТИРОВКА =====
+        const sorted = [...filtered];
+
+        if (currentSort === 'budget') {
+            // Сортировка по доходам (убывание/возрастание)
+            sorted.sort((a, b) => {
+                if (sortDirection === 'desc') {
+                    return b.income - a.income;
+                } else {
+                    return a.income - b.income;
+                }
+            });
+        } else if (currentSort === 'name') {
+            // Сортировка по названию (алфавит)
+            sorted.sort((a, b) => {
+                if (sortDirection === 'asc') {
+                    return a.name.localeCompare(b.name);
+                } else {
+                    return b.name.localeCompare(a.name);
+                }
+            });
+        }
+
+        // ===== ШАГ 3: ОТОБРАЖЕНИЕ =====
+        tbody.innerHTML = '';
+
+        if (sorted.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Регионы не найдены</td></tr>';
+            return;
+        }
+
+        sorted.forEach((region, index) => {
+            const row = tbody.insertRow();
+
+            // №
+            row.insertCell(0).textContent = (index + 1);
+
+            // Название региона
+            row.insertCell(1).textContent = region.name;
+            row.cells[1].style.fontWeight = '600';
+
+            // Доходы
+            const incomeCell = row.insertCell(2);
+            incomeCell.textContent = region.income.toFixed(1);
+            incomeCell.style.fontFamily = 'monospace';
+
+            // Расходы
+            const expenseCell = row.insertCell(3);
+            expenseCell.textContent = region.expense.toFixed(1);
+            expenseCell.style.fontFamily = 'monospace';
+
+            // Дефицит
+            const deficit = region.expense - region.income;
+            const deficitCell = row.insertCell(4);
+            deficitCell.textContent = deficit.toFixed(1);
+            deficitCell.style.fontFamily = 'monospace';
+
+            // Красный если дефицит, зелёный если профицит
+            if (deficit > 0) {
+                deficitCell.style.color = '#ff6666';
+            } else if (deficit < 0) {
+                deficitCell.style.color = '#66ff66';
+            } else {
+                deficitCell.style.color = '#ffd966';
+            }
+        });
+    }
+
+    /**
+     * ================================================================
+     * 6. ОБРАБОТЧИКИ СОБЫТИЙ (поиск и сортировка)
+     * ================================================================
+     */
+    function setupEventHandlers() {
+        // Поиск
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const yearData = allRegions.filter(r => r.year == currentYear);
+                renderTable(yearData);
+            });
+        }
+
+        // Сортировка по бюджету
+        const budgetBtn = document.getElementById('sortByBudgetBtn');
+        if (budgetBtn) {
+            budgetBtn.addEventListener('click', function() {
+                if (currentSort === 'budget') {
+                    sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+                } else {
+                    currentSort = 'budget';
+                    sortDirection = 'desc';
+                }
+                const yearData = allRegions.filter(r => r.year == currentYear);
+                renderTable(yearData);
+            });
+        }
+
+        // Сортировка по названию
+        const nameBtn = document.getElementById('sortByNameBtn');
+        if (nameBtn) {
+            nameBtn.addEventListener('click', function() {
+                if (currentSort === 'name') {
+                    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort = 'name';
+                    sortDirection = 'asc';
+                }
+                const yearData = allRegions.filter(r => r.year == currentYear);
+                renderTable(yearData);
+            });
+        }
+    }
+
+    /**
+     * ================================================================
+     * 7. ЗАПУСК
+     * ================================================================
+     */
+    document.addEventListener('DOMContentLoaded', function() {
+        loadData();
+        setupEventHandlers();
+        console.log('✅ Сайт "Бюджеты России" загружен! Данные парсятся с Минфина');
+    });
+</script>
+</body>
+</html>
+
